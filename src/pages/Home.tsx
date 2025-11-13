@@ -47,7 +47,7 @@ const Home = () => {
               size="lg" 
               variant="ghost" 
               className="text-lg px-8 py-6 rounded-full"
-              onClick={() => navigate("/shop/demo")}
+              onClick={() => navigate("/create")}
             >
               View sample store
             </Button>
@@ -61,7 +61,7 @@ const Home = () => {
                   <span className="text-3xl">🛍️</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Sample Store</h3>
+                  <h3 className="font-semibold text-lg">Cake Cafe</h3>
                   <p className="text-sm text-muted-foreground">Fresh products daily</p>
                 </div>
                 <div className="w-full aspect-square bg-secondary rounded-2xl overflow-hidden">
