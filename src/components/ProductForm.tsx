@@ -17,9 +17,42 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
   const [title, setTitle] = useState(product?.title || "");
   const [price, setPrice] = useState(product?.price || "");
   const [description, setDescription] = useState(product?.description || "");
-  const [imageUrl, setImageUrl] = useState(product?.image_url || "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState(product?.image_url || "");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!imageFile) return product?.image_url || null;
+
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${profile.id}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('card-images')
+      .upload(filePath, imageFile);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('card-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -33,6 +66,8 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
     setIsLoading(true);
 
     try {
+      const imageUrl = await uploadImage();
+
       if (product) {
         // Update existing product
         const { error } = await supabase
@@ -42,7 +77,7 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
             price,
             description,
             image_url: imageUrl,
-            cta_type: "whatsapp",
+            cta_type: "link",
           })
           .eq("id", product.id);
 
@@ -61,7 +96,7 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
             price,
             description,
             image_url: imageUrl,
-            cta_type: "whatsapp",
+            cta_type: "link",
             order_index: 0,
           });
 
@@ -130,22 +165,34 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Image URL</label>
-            <Input
-              placeholder="https://example.com/image.jpg"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="py-5 rounded-xl"
-            />
-            {imageUrl && (
-              <div className="mt-4 rounded-xl overflow-hidden border border-border">
-                <img
-                  src={imageUrl}
-                  alt="Preview"
-                  className="w-full aspect-square object-cover"
-                />
-              </div>
-            )}
+            <label className="text-sm font-medium">Product Image</label>
+            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                id="image-upload"
+              />
+              <label htmlFor="image-upload" className="cursor-pointer">
+                {imagePreview ? (
+                  <div className="space-y-4">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full aspect-square object-cover rounded-lg"
+                    />
+                    <p className="text-sm text-muted-foreground">Tap to change image</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-4xl">📸</div>
+                    <p className="text-sm font-medium">Tap to upload image</p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
+                  </div>
+                )}
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4">
