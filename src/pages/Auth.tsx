@@ -10,7 +10,10 @@ const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(() => {
+    // Default to signup if coming from create store flow
+    return !!localStorage.getItem("pendingShopName");
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +49,7 @@ const Auth = () => {
       if (isSignUp) {
         const redirectUrl = `${window.location.origin}/dashboard`;
         
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -56,10 +59,18 @@ const Auth = () => {
 
         if (error) throw error;
 
-        toast({
-          title: "Check your email",
-          description: "We've sent you a confirmation link",
-        });
+        // If session is created immediately (email confirmation disabled), redirect to dashboard
+        if (data.session) {
+          toast({
+            title: "Account created!",
+          });
+          navigate("/dashboard");
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We've sent you a confirmation link",
+          });
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
