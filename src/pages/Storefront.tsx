@@ -118,15 +118,25 @@ const Storefront = () => {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-2xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-semibold">Onlink</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleShare}
-            className="rounded-full"
-          >
-            <Share2 className="h-5 w-5" />
-          </Button>
+          <h1 className="text-lg font-semibold">onelinc</h1>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.location.href = '/'}
+              className="rounded-full text-xs px-4 py-2 hover:bg-secondary/80"
+            >
+              Build your shop
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              className="rounded-full"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
