@@ -1,5 +1,13 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, MessageCircle } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface ProductModalProps {
   product: any;
@@ -8,6 +16,9 @@ interface ProductModalProps {
 }
 
 const ProductModal = ({ product, onClose, onWhatsApp }: ProductModalProps) => {
+  const images = product.image_urls || [];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 animate-fade-in"
@@ -25,13 +36,43 @@ const ProductModal = ({ product, onClose, onWhatsApp }: ProductModalProps) => {
         </div>
 
         <div className="p-6 space-y-6">
-          {product.image_url && (
-            <div className="w-full aspect-square rounded-2xl overflow-hidden bg-secondary">
-              <img
-                src={product.image_url}
-                alt={product.title}
-                className="w-full h-full object-cover"
-              />
+          {images.length > 0 && (
+            <div className="relative">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {images.map((image: string, index: number) => (
+                    <CarouselItem key={index}>
+                      <div className="w-full aspect-square rounded-2xl overflow-hidden bg-secondary">
+                        <img
+                          src={image}
+                          alt={`${product.title} ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                {images.length > 1 && (
+                  <>
+                    <CarouselPrevious className="left-4" />
+                    <CarouselNext className="right-4" />
+                  </>
+                )}
+              </Carousel>
+              {images.length > 1 && (
+                <div className="flex justify-center gap-2 mt-4">
+                  {images.map((_: any, index: number) => (
+                    <div
+                      key={index}
+                      className={`h-2 rounded-full transition-all ${
+                        index === currentIndex 
+                          ? "w-6 bg-primary" 
+                          : "w-2 bg-muted-foreground/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

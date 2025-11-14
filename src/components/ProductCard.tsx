@@ -8,16 +8,24 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
+  const images = product.image_urls || [];
+  const hasMultipleImages = images.length > 1;
+
   return (
     <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-apple hover:shadow-apple-lg transition-all">
       <div className="flex gap-4 p-4">
-        {product.image_url && (
-          <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-secondary">
+        {images.length > 0 && (
+          <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-secondary">
             <img
-              src={product.image_url}
+              src={images[0]}
               alt={product.title}
               className="w-full h-full object-cover"
             />
+            {hasMultipleImages && (
+              <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                +{images.length - 1}
+              </div>
+            )}
           </div>
         )}
         <div className="flex-1 min-w-0">

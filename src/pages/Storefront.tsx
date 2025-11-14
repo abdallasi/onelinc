@@ -172,10 +172,10 @@ const Storefront = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => setSelectedProduct(product)}
               >
-                {product.image_url && (
+                {(product.image_urls && product.image_urls.length > 0) && (
                   <div className="w-full aspect-square overflow-hidden">
                     <img
-                      src={product.image_url}
+                      src={product.image_urls[0]}
                       alt={product.title}
                       className="w-full h-full object-cover"
                     />

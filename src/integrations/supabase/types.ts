@@ -22,7 +22,7 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
-          image_url: string | null
+          image_urls: string[] | null
           link_url: string | null
           order_index: number
           price: string | null
@@ -37,7 +37,7 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
-          image_url?: string | null
+          image_urls?: string[] | null
           link_url?: string | null
           order_index?: number
           price?: string | null
@@ -52,7 +52,7 @@ export type Database = {
           description?: string | null
           icon?: string | null
           id?: string
-          image_url?: string | null
+          image_urls?: string[] | null
           link_url?: string | null
           order_index?: number
           price?: string | null
@@ -111,6 +111,53 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          customer_code: string
+          email_token: string | null
+          id: string
+          next_payment_date: string | null
+          plan_code: string
+          profile_id: string
+          status: string
+          subscription_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_code: string
+          email_token?: string | null
+          id?: string
+          next_payment_date?: string | null
+          plan_code?: string
+          profile_id: string
+          status?: string
+          subscription_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_code?: string
+          email_token?: string | null
+          id?: string
+          next_payment_date?: string | null
+          plan_code?: string
+          profile_id?: string
+          status?: string
+          subscription_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -83,7 +83,7 @@ const Paywall = () => {
         <div className="bg-card rounded-3xl border border-border p-8 shadow-apple-lg">
           <div className="space-y-6">
             <div>
-              <p className="text-5xl font-bold">₦2,000</p>
+              <p className="text-5xl font-bold">₦3,000</p>
               <p className="text-muted-foreground">per month</p>
             </div>
 
