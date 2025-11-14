@@ -1,14 +1,68 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 const Paywall = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  const handleUpgrade = () => {
-    // This would integrate with payment processing
-    // For now, just show a toast
-    alert("Payment integration coming soon! This would charge ₦2,000/month.");
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profile) {
+        setProfileId(profile.id);
+        setUserEmail(user.email || null);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  const handleUpgrade = async () => {
+    if (!profileId || !userEmail) {
+      toast({
+        title: "Error",
+        description: "Please log in to upgrade",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("initialize-subscription", {
+        body: { profileId, email: userEmail },
+      });
+
+      if (error) throw error;
+
+      if (data?.authorization_url) {
+        window.location.href = data.authorization_url;
+      }
+    } catch (error) {
+      console.error("Subscription error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,8 +118,16 @@ const Paywall = () => {
               size="lg"
               className="w-full py-6 rounded-full shadow-apple text-lg"
               onClick={handleUpgrade}
+              disabled={loading}
             >
-              Upgrade Now
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  Processing...
+                </>
+              ) : (
+                "Upgrade Now"
+              )}
             </Button>
 
             <Button
