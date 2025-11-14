@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import { X, ImagePlus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,41 +17,65 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
   const [title, setTitle] = useState(product?.title || "");
   const [price, setPrice] = useState(product?.price || "");
   const [description, setDescription] = useState(product?.description || "");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState(product?.image_url || "");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>(product?.image_urls || []);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const totalImages = imagePreviews.length + files.length;
+    if (totalImages > 5) {
+      toast({
+        title: "Maximum 5 images allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImageFiles([...imageFiles, ...files]);
+    
+    files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreviews(prev => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
 
-  const uploadImage = async () => {
-    if (!imageFile) return product?.image_url || null;
+  const removeImage = (index: number) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${profile.id}/${fileName}`;
+  const uploadImages = async () => {
+    if (imageFiles.length === 0) return product?.image_urls || [];
 
-    const { error: uploadError } = await supabase.storage
-      .from('card-images')
-      .upload(filePath, imageFile);
+    const uploadPromises = imageFiles.map(async (file) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${profile.id}/${fileName}`;
 
-    if (uploadError) throw uploadError;
+      const { error: uploadError } = await supabase.storage
+        .from('card-images')
+        .upload(filePath, file);
 
-    const { data } = supabase.storage
-      .from('card-images')
-      .getPublicUrl(filePath);
+      if (uploadError) throw uploadError;
 
-    return data.publicUrl;
+      const { data } = supabase.storage
+        .from('card-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    });
+
+    const newUrls = await Promise.all(uploadPromises);
+    const existingUrls = product?.image_urls || [];
+    
+    return [...existingUrls.slice(0, imagePreviews.length - imageFiles.length), ...newUrls];
   };
 
   const handleSubmit = async () => {
@@ -66,17 +90,16 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
     setIsLoading(true);
 
     try {
-      const imageUrl = await uploadImage();
+      const imageUrls = await uploadImages();
 
       if (product) {
-        // Update existing product
         const { error } = await supabase
           .from("cards")
           .update({
             title,
             price,
             description,
-            image_url: imageUrl,
+            image_urls: imageUrls,
             cta_type: "link",
           })
           .eq("id", product.id);
@@ -87,7 +110,6 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
           title: "Product updated!",
         });
       } else {
-        // Create new product
         const { error } = await supabase
           .from("cards")
           .insert({
@@ -95,7 +117,7 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
             title,
             price,
             description,
-            image_url: imageUrl,
+            image_urls: imageUrls,
             cta_type: "link",
             order_index: 0,
           });
@@ -165,33 +187,37 @@ const ProductForm = ({ profile, product, onClose, onSave }: ProductFormProps) =>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Product Image</label>
-            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-                id="image-upload"
-              />
-              <label htmlFor="image-upload" className="cursor-pointer">
-                {imagePreview ? (
-                  <div className="space-y-4">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full aspect-square object-cover rounded-lg"
-                    />
-                    <p className="text-sm text-muted-foreground">Tap to change image</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="text-4xl">📸</div>
-                    <p className="text-sm font-medium">Tap to upload image</p>
-                    <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
-                  </div>
-                )}
-              </label>
+            <label className="text-sm font-medium">Product Images (up to 5)</label>
+            <div className="grid grid-cols-3 gap-4">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-secondary">
+                  <img
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                    onClick={() => removeImage(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              {imagePreviews.length < 5 && (
+                <label className="aspect-square rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-colors cursor-pointer flex items-center justify-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                </label>
+              )}
             </div>
           </div>
 
