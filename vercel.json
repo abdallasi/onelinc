@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/capture",
+      "destination": "/capture.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
