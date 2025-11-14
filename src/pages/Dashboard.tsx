@@ -249,7 +249,7 @@ const Dashboard = () => {
             <p className="text-muted-foreground">{profile.bio}</p>
           )}
           <p className="text-sm text-muted-foreground">
-            onlink.app/shop/{profile.slug}
+            onelinc.app/shop/{profile.slug}
           </p>
         </div>
 
@@ -274,16 +274,40 @@ const Dashboard = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onEdit={handleEditProduct}
-                  onDelete={handleDeleteProduct}
-                />
-              ))}
-            </div>
+            <>
+              {products.length === 1 && (
+                <div className="bg-secondary/30 rounded-2xl border border-border/50 p-6 text-center mb-4">
+                  <p className="text-sm font-medium mb-2">🎉 Great start!</p>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Your store is live. Ready to share it with customers?
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/shop/${profile.slug}`);
+                      toast({
+                        title: "Link copied!",
+                        description: "Share your store with customers",
+                      });
+                    }}
+                    className="rounded-full"
+                  >
+                    Copy store link
+                  </Button>
+                </div>
+              )}
+              <div className="grid gap-4">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onEdit={handleEditProduct}
+                    onDelete={handleDeleteProduct}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </main>

@@ -9,7 +9,7 @@ const Home = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="w-full py-4 px-6 flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Onlink</h2>
+        <h2 className="text-xl font-semibold">onelinc</h2>
         <Button 
           variant="ghost" 
           onClick={() => navigate("/auth")}
@@ -20,15 +20,15 @@ const Home = () => {
 
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+        <div className="max-w-4xl mx-auto space-y-8 animate-fade-in mt-16 md:mt-0">
           {/* Headline */}
           <div className="space-y-4">
-            <h1 className="text-6xl md:text-7xl font-bold tracking-tight">
+            <h1 className="text-[3.2rem] md:text-[3.7rem] font-bold tracking-tight leading-tight">
               Your shop.
               <br />
               One link.
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-[1.1rem] md:text-[1.3rem] text-muted-foreground max-w-2xl mx-auto">
               Create a clean product page your customers actually trust.
             </p>
           </div>

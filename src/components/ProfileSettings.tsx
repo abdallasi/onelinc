@@ -18,7 +18,51 @@ const ProfileSettings = ({ profile, onClose, onSave }: ProfileSettingsProps) => 
   const [phoneNumber, setPhoneNumber] = useState(profile.phone_number || "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("card-images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("card-images")
+        .getPublicUrl(filePath);
+
+      setAvatarUrl(publicUrl);
+      toast({
+        title: "Image uploaded!",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error uploading image",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -109,13 +153,17 @@ const ProfileSettings = ({ profile, onClose, onSave }: ProfileSettingsProps) => 
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Profile Image URL</label>
+            <label className="text-sm font-medium">Profile Image</label>
             <Input
-              placeholder="https://example.com/avatar.jpg"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              className="py-5 rounded-xl"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="py-5 rounded-xl cursor-pointer"
+              disabled={uploading}
             />
+            {uploading && (
+              <p className="text-xs text-muted-foreground">Uploading...</p>
+            )}
             {avatarUrl && (
               <div className="mt-4">
                 <div className="w-24 h-24 rounded-full overflow-hidden border border-border mx-auto">
