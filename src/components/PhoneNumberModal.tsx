@@ -57,19 +57,16 @@ export const PhoneNumberModal = ({ open, onComplete, profileId }: PhoneNumberMod
     }
   };
 
-  const handleSkip = () => {
-    onComplete();
-  };
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md rounded-3xl border-border/50">
-        <DialogHeader className="text-center space-y-3">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+      <DialogContent className="sm:max-w-[320px] rounded-3xl border-border/50">
+        <DialogHeader className="text-center space-y-2">
+          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="32"
-              height="32"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -81,40 +78,29 @@ export const PhoneNumberModal = ({ open, onComplete, profileId }: PhoneNumberMod
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
           </div>
-          <DialogTitle className="text-2xl font-semibold">Add your phone number</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogTitle className="text-xl font-semibold">Add your phone number</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
             Help customers reach you easily
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 mt-4">
+        <div className="space-y-3 mt-3">
           <Input
             type="tel"
             placeholder="+234 800 000 0000"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            className="py-6 text-center text-lg rounded-xl"
+            className="py-5 text-center rounded-xl"
             disabled={isLoading}
           />
           
-          <div className="space-y-2">
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading || !phoneNumber}
-              className="w-full py-6 rounded-xl text-base font-semibold"
-            >
-              {isLoading ? "Saving..." : "Continue"}
-            </Button>
-            
-            <Button
-              onClick={handleSkip}
-              variant="ghost"
-              className="w-full py-6 rounded-xl text-base"
-              disabled={isLoading}
-            >
-              Skip for now
-            </Button>
-          </div>
+          <Button
+            onClick={handleSubmit}
+            disabled={isLoading || !phoneNumber}
+            className="w-full py-5 rounded-xl font-semibold"
+          >
+            {isLoading ? "Saving..." : "Continue"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
