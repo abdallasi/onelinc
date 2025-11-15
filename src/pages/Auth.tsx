@@ -51,6 +51,31 @@ const Auth = () => {
     try {
       if (isSignUp) {
         const redirectUrl = `${window.location.origin}/dashboard`;
+        const pendingShopName = localStorage.getItem("pendingShopName");
+        
+        // First, check if slug is available
+        if (pendingShopName) {
+          const slug = pendingShopName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+
+          const { data: existingProfile } = await supabase
+            .from("profiles")
+            .select("slug")
+            .eq("slug", slug)
+            .maybeSingle();
+
+          if (existingProfile) {
+            toast({
+              title: "Username taken",
+              description: "This store name is already in use. Please choose a different one.",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
         
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -60,7 +85,13 @@ const Auth = () => {
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          // Provide specific error messages
+          if (error.message.includes("already registered")) {
+            throw new Error("This email is already registered. Please sign in instead.");
+          }
+          throw error;
+        }
 
         // If session is created immediately (email confirmation disabled), show phone modal
         if (data.session) {
@@ -93,7 +124,16 @@ const Auth = () => {
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          // Provide specific error messages for sign in
+          if (error.message.includes("Invalid login credentials")) {
+            throw new Error("Incorrect email or password. Please try again.");
+          }
+          if (error.message.includes("Email not confirmed")) {
+            throw new Error("Please verify your email address before signing in.");
+          }
+          throw error;
+        }
 
         toast({
           title: "Welcome back!",
