@@ -163,29 +163,45 @@ const Dashboard = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
+    try {
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/${profile.slug}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: profile.name,
-          text: `Check out my store: ${profile.name}`,
-          url: url,
+    try {
+      const url = `${window.location.origin}/shop/${profile.slug}`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: profile.name,
+            text: `Check out my store: ${profile.name}`,
+            url: url,
+          });
+        } catch (error) {
+          // User cancelled share
+        }
+      } else {
+        // Fallback to copying
+        await navigator.clipboard.writeText(url);
+        toast({
+          title: "Link copied!",
+          description: "Share your store link with customers",
         });
-      } catch (error) {
-        // User cancelled share
       }
-    } else {
-      // Fallback to copying
-      navigator.clipboard.writeText(url);
+    } catch (error: any) {
       toast({
-        title: "Link copied!",
-        description: "Share your store link with customers",
+        title: "Error sharing",
+        description: "Failed to share your store",
+        variant: "destructive",
       });
     }
   };
@@ -353,12 +369,18 @@ const Dashboard = () => {
       {products.length > 0 && (
         <button
           onClick={handleShare}
-          className="fixed bottom-8 right-8 bg-primary text-primary-foreground rounded-full p-4 shadow-apple-lg hover:shadow-apple-xl transition-all hover:scale-105 active:scale-95 z-50"
-          aria-label="Share my store"
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 z-50 font-medium"
         >
-          <Share2 className="h-6 w-6" />
+          Share my store
         </button>
       )}
+
+      {/* Phone Number Modal */}
+      <PhoneNumberModal
+        open={showPhoneModal}
+        onComplete={handlePhoneModalComplete}
+        profileId={profile?.id}
+      />
     </div>
   );
 };
