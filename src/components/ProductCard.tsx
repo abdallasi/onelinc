@@ -33,11 +33,6 @@ const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
           {product.price && (
             <p className="text-muted-foreground font-medium">{product.price}</p>
           )}
-          {product.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-              {product.description}
-            </p>
-          )}
         </div>
         <div className="flex flex-col gap-2">
           <Button

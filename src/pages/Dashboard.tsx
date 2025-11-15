@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, LogOut, User, ExternalLink } from "lucide-react";
+import { Plus, LogOut, User, ExternalLink, Share2 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ProductForm from "@/components/ProductForm";
 import ProfileSettings from "@/components/ProfileSettings";
+import { PhoneNumberModal } from "@/components/PhoneNumberModal";
 
 const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -15,6 +16,7 @@ const Dashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -57,6 +59,11 @@ const Dashboard = () => {
 
       setProfile(data);
       fetchProducts(data.id);
+      
+      // Check if phone number is missing
+      if (!data.phone_number) {
+        setShowPhoneModal(true);
+      }
     } catch (error: any) {
       toast({
         title: "Error loading profile",
@@ -158,6 +165,36 @@ const Dashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/${profile.slug}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: profile.name,
+          text: `Check out my store: ${profile.name}`,
+          url: url,
+        });
+      } catch (error) {
+        // User cancelled share
+      }
+    } else {
+      // Fallback to copying
+      navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied!",
+        description: "Share your store link with customers",
+      });
+    }
+  };
+
+  const handlePhoneModalComplete = () => {
+    setShowPhoneModal(false);
+    if (profile) {
+      setProfile({ ...profile, phone_number: "updated" });
+    }
   };
 
   if (isLoading) {
@@ -311,6 +348,17 @@ const Dashboard = () => {
           )}
         </div>
       </main>
+
+      {/* Floating Share Button - only show when there's at least 1 product */}
+      {products.length > 0 && (
+        <button
+          onClick={handleShare}
+          className="fixed bottom-8 right-8 bg-primary text-primary-foreground rounded-full p-4 shadow-apple-lg hover:shadow-apple-xl transition-all hover:scale-105 active:scale-95 z-50"
+          aria-label="Share my store"
+        >
+          <Share2 className="h-6 w-6" />
+        </button>
+      )}
     </div>
   );
 };
