@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { PhoneNumberModal } from "@/components/PhoneNumberModal";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -17,6 +18,8 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [newProfileId, setNewProfileId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -59,12 +62,25 @@ const Auth = () => {
 
         if (error) throw error;
 
-        // If session is created immediately (email confirmation disabled), redirect to dashboard
+        // If session is created immediately (email confirmation disabled), show phone modal
         if (data.session) {
-          toast({
-            title: "Account created!",
-          });
-          navigate("/dashboard");
+          // Fetch the profile ID for the new user
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", data.user.id)
+            .single();
+
+          if (profileData) {
+            setNewProfileId(profileData.id);
+            setShowPhoneModal(true);
+          } else {
+            // No profile yet, just redirect
+            toast({
+              title: "Account created!",
+            });
+            navigate("/dashboard");
+          }
         } else {
           toast({
             title: "Check your email",
@@ -96,8 +112,23 @@ const Auth = () => {
     }
   };
 
+  const handlePhoneModalComplete = () => {
+    setShowPhoneModal(false);
+    toast({
+      title: "Account created!",
+    });
+    navigate("/dashboard");
+  };
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+    <>
+      <PhoneNumberModal
+        open={showPhoneModal}
+        onComplete={handlePhoneModalComplete}
+        profileId={newProfileId || ""}
+      />
+      
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="max-w-md w-full">
         <div className="bg-card rounded-3xl shadow-apple-lg p-8 border border-border animate-scale-in">
           <div className="space-y-6">
@@ -151,7 +182,8 @@ const Auth = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
