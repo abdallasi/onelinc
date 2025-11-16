@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Storefront from "./pages/Storefront";
 import Auth from "./pages/Auth";
 import Paywall from "./pages/Paywall";
+import Warroom from "./pages/Warroom";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/paywall" element={<Paywall />} />
           <Route path="/shop/:slug" element={<Storefront />} />
+          <Route path="/warroom01" element={<Warroom />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
