@@ -17,6 +17,8 @@ export default function UserDetailModal({ open, onOpenChange, profileId }: UserD
   const [cards, setCards] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function UserDetailModal({ open, onOpenChange, profileId }: UserD
       setProfile(profileData);
       setCards(cardsData || []);
       setSubscription(subData);
+      setEditedProfile(profileData);
     } catch (error) {
       toast({
         title: "Failed to load details",
@@ -59,6 +62,58 @@ export default function UserDetailModal({ open, onOpenChange, profileId }: UserD
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveProfileChanges = async () => {
+    if (!editedProfile) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        name: editedProfile.name,
+        slug: editedProfile.slug,
+        bio: editedProfile.bio,
+        phone_number: editedProfile.phone_number,
+      })
+      .eq("id", profileId);
+
+    if (error) {
+      toast({
+        title: "Failed to update profile",
+        variant: "destructive",
+      });
+    } else {
+      setProfile(editedProfile);
+      setIsEditing(false);
+      toast({
+        title: "Profile updated",
+      });
+    }
+  };
+
+  const deleteAccount = async () => {
+    // Delete cards first
+    await supabase.from("cards").delete().eq("profile_id", profileId);
+    
+    // Delete subscription
+    if (subscription) {
+      await supabase.from("subscriptions").delete().eq("id", subscription.id);
+    }
+
+    // Delete profile
+    const { error } = await supabase.from("profiles").delete().eq("id", profileId);
+
+    if (error) {
+      toast({
+        title: "Failed to delete account",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Account deleted",
+      });
+      onOpenChange(false);
     }
   };
 
@@ -90,28 +145,6 @@ export default function UserDetailModal({ open, onOpenChange, profileId }: UserD
     }
   };
 
-  const disableAccount = async () => {
-    // For now, we'll mark subscription as inactive
-    // You could add a disabled field to profiles table if needed
-    if (subscription) {
-      const { error } = await supabase
-        .from("subscriptions")
-        .update({ status: "inactive" })
-        .eq("id", subscription.id);
-
-      if (error) {
-        toast({
-          title: "Failed to disable account",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Account disabled",
-        });
-        onOpenChange(false);
-      }
-    }
-  };
 
   if (loading || !profile) {
     return (
@@ -135,26 +168,95 @@ export default function UserDetailModal({ open, onOpenChange, profileId }: UserD
         <div className="space-y-6 py-4">
           {/* Profile Info */}
           <Card className="p-6 border-none shadow-sm space-y-4">
-            <h3 className="text-lg font-semibold">Profile</h3>
-            <div className="space-y-2 text-sm">
-              <p className="flex justify-between">
-                <span className="text-muted-foreground">Slug:</span>
-                <span className="font-medium">{profile.slug}</span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-muted-foreground">Phone:</span>
-                <span className="font-medium">{profile.phone_number || "—"}</span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-muted-foreground">Created:</span>
-                <span className="font-medium">{new Date(profile.created_at).toLocaleDateString()}</span>
-              </p>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Profile</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (isEditing) {
+                    saveProfileChanges();
+                  } else {
+                    setIsEditing(true);
+                  }
+                }}
+              >
+                {isEditing ? "Save" : "Edit"}
+              </Button>
             </div>
-            {profile.bio && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Bio:</p>
-                <p className="text-sm">{profile.bio}</p>
+            {isEditing ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm text-muted-foreground">Name</label>
+                  <input
+                    type="text"
+                    value={editedProfile?.name || ""}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Slug</label>
+                  <input
+                    type="text"
+                    value={editedProfile?.slug || ""}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, slug: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Phone</label>
+                  <input
+                    type="text"
+                    value={editedProfile?.phone_number || ""}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, phone_number: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Bio</label>
+                  <textarea
+                    value={editedProfile?.bio || ""}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
+                    rows={3}
+                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditedProfile(profile);
+                  }}
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
               </div>
+            ) : (
+              <>
+                <div className="space-y-2 text-sm">
+                  <p className="flex justify-between">
+                    <span className="text-muted-foreground">Slug:</span>
+                    <span className="font-medium">{profile.slug}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-muted-foreground">Phone:</span>
+                    <span className="font-medium">{profile.phone_number || "—"}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-muted-foreground">Created:</span>
+                    <span className="font-medium">{new Date(profile.created_at).toLocaleDateString()}</span>
+                  </p>
+                </div>
+                {profile.bio && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Bio:</p>
+                    <p className="text-sm">{profile.bio}</p>
+                  </div>
+                )}
+              </>
             )}
           </Card>
 
@@ -213,13 +315,40 @@ export default function UserDetailModal({ open, onOpenChange, profileId }: UserD
           </Card>
 
           {/* Actions */}
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                if (subscription) {
+                  supabase
+                    .from("subscriptions")
+                    .update({ status: "inactive" })
+                    .eq("id", subscription.id)
+                    .then(({ error }) => {
+                      if (error) {
+                        toast({
+                          title: "Failed to disable account",
+                          variant: "destructive",
+                        });
+                      } else {
+                        toast({
+                          title: "Account disabled",
+                        });
+                        onOpenChange(false);
+                      }
+                    });
+                }
+              }}
+            >
+              Disable Account
+            </Button>
             <Button
               variant="destructive"
               className="w-full"
-              onClick={disableAccount}
+              onClick={deleteAccount}
             >
-              Disable Account
+              Delete Account
             </Button>
           </div>
         </div>
