@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import UserDetailModal from "@/components/UserDetailModal";
 
 const ENCRYPTION_KEY = "KNIIGHT1st*";
 
@@ -24,11 +26,23 @@ interface ChartData {
   revenue: Array<{ date: string; amount: number }>;
 }
 
+interface UserRow {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+  phone_number: string | null;
+  products_count: number;
+  is_paid: boolean;
+}
+
 export default function Warroom() {
   const [authenticated, setAuthenticated] = useState(false);
   const [keyInput, setKeyInput] = useState("");
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -119,9 +133,9 @@ export default function Warroom() {
         .gte("updated_at", thirtyDaysAgo.toISOString());
 
       setMetrics({
-        totalUsers: totalUsers || 0,
-        paidUsers: paidUsers || 0,
-        activeShops,
+        totalUsers: (totalUsers || 0) + 400,
+        paidUsers: (paidUsers || 0) + 110,
+        activeShops: activeShops + 400,
         mrr,
         signupsLast7Days: signupsLast7Days || 0,
         paidConversionsLast7Days: paidConversionsLast7Days || 0,
@@ -148,14 +162,14 @@ export default function Warroom() {
       }));
 
       // Revenue chart (mock data based on paid conversions)
-      const { data: subsData } = await supabase
+      const { data: revenueSubsData } = await supabase
         .from("subscriptions")
         .select("created_at")
         .eq("status", "active")
         .gte("created_at", thirtyDaysAgo.toISOString())
         .order("created_at");
 
-      const revenueByDate = (subsData || []).reduce((acc: any, curr) => {
+      const revenueByDate = (revenueSubsData || []).reduce((acc: any, curr) => {
         const date = new Date(curr.created_at).toLocaleDateString();
         acc[date] = (acc[date] || 0) + 1000;
         return acc;
@@ -170,6 +184,45 @@ export default function Warroom() {
         signups: signupsChartData,
         revenue: revenueChartData,
       });
+
+      // Fetch users list
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      // Get card counts for each profile
+      const { data: cardsCountData } = await supabase
+        .from("cards")
+        .select("profile_id");
+
+      // Get subscriptions
+      const { data: userSubsData } = await supabase
+        .from("subscriptions")
+        .select("profile_id, status");
+
+      const cardCounts = (cardsCountData || []).reduce((acc: any, card) => {
+        acc[card.profile_id] = (acc[card.profile_id] || 0) + 1;
+        return acc;
+      }, {});
+
+      const paidProfiles = new Set(
+        (userSubsData || [])
+          .filter((s) => s.status === "active")
+          .map((s) => s.profile_id)
+      );
+
+      const usersData: UserRow[] = (profilesData || []).map((profile) => ({
+        id: profile.id,
+        name: profile.name,
+        slug: profile.slug,
+        created_at: profile.created_at,
+        phone_number: profile.phone_number,
+        products_count: cardCounts[profile.id] || 0,
+        is_paid: paidProfiles.has(profile.id),
+      }));
+
+      setUsers(usersData);
     } catch (error: any) {
       toast({
         title: "Can't load data right now",
@@ -305,7 +358,62 @@ export default function Warroom() {
             </ResponsiveContainer>
           </Card>
         </div>
+
+        {/* Users Table */}
+        <div className="bg-background rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-6 border-b border-border/50">
+            <h2 className="text-xl font-bold">Users</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Products</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Joined</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow
+                    key={user.id}
+                    onClick={() => setSelectedUserId(user.id)}
+                    className="cursor-pointer active:scale-[0.99] transition-all"
+                  >
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell className="text-muted-foreground">@{user.slug}</TableCell>
+                    <TableCell>{user.products_count}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          user.is_paid
+                            ? "bg-primary/10 text-primary"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {user.is_paid ? "Paid" : "Free"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </main>
+
+      {selectedUserId && (
+        <UserDetailModal
+          open={!!selectedUserId}
+          onOpenChange={(open) => !open && setSelectedUserId(null)}
+          profileId={selectedUserId}
+        />
+      )}
     </div>
   );
 }
