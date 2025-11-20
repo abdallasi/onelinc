@@ -13,6 +13,7 @@ const Storefront = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -93,6 +94,35 @@ const Storefront = () => {
 
     const whatsappUrl = `https://wa.me/${profile.phone_number.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
+  };
+
+  const handleProductSelect = (product: any) => {
+    setSelectedProducts((prev) => {
+      const isSelected = prev.some((p) => p.id === product.id);
+      if (isSelected) {
+        return prev.filter((p) => p.id !== product.id);
+      } else {
+        return [...prev, product];
+      }
+    });
+  };
+
+  const handleMultipleWhatsApp = () => {
+    if (!profile.phone_number) {
+      toast({
+        title: "WhatsApp not configured",
+        description: "Store owner hasn't added their WhatsApp number yet",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const productList = selectedProducts.map((p) => `• ${p.title}`).join('\n');
+    const message = `Hello, I want to order the following products:\n\n${productList}`;
+
+    const whatsappUrl = `https://wa.me/${profile.phone_number.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+    setSelectedProducts([]);
   };
 
   if (isLoading) {
@@ -176,6 +206,8 @@ const Storefront = () => {
                   product={product}
                   onClick={() => setSelectedProduct(product)}
                   onWhatsApp={handleWhatsApp}
+                  onSelect={handleProductSelect}
+                  isSelected={selectedProducts.some((p) => p.id === product.id)}
                 />
               </div>
             ))}
@@ -183,15 +215,16 @@ const Storefront = () => {
         )}
       </main>
 
-      {/* Floating WhatsApp Button */}
-      {profile.phone_number && (
-        <div className="fixed bottom-6 right-6">
+      {/* Multi-Select WhatsApp Button */}
+      {selectedProducts.length > 0 && profile.phone_number && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 animate-scale-in">
           <Button
             size="lg"
-            className="rounded-full shadow-apple-lg bg-whatsapp hover:bg-whatsapp/90 text-white h-14 w-14 p-0"
-            onClick={() => handleWhatsApp()}
+            className="rounded-full shadow-apple-lg bg-foreground hover:bg-foreground/90 text-background px-8 h-14 font-medium"
+            onClick={handleMultipleWhatsApp}
           >
-            <MessageCircle className="h-6 w-6" />
+            <MessageCircle className="h-5 w-5 mr-2" />
+            DM on WhatsApp ({selectedProducts.length})
           </Button>
         </div>
       )}

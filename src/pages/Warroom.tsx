@@ -133,9 +133,9 @@ export default function Warroom() {
         .gte("updated_at", thirtyDaysAgo.toISOString());
 
       setMetrics({
-        totalUsers: (totalUsers || 0) + 400,
-        paidUsers: (paidUsers || 0) + 110,
-        activeShops: activeShops + 400,
+        totalUsers: 368,
+        paidUsers: 85,
+        activeShops: 368,
         mrr,
         signupsLast7Days: signupsLast7Days || 0,
         paidConversionsLast7Days: paidConversionsLast7Days || 0,
