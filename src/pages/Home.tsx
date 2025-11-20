@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -53,26 +53,42 @@ const Home = () => {
             </Button>
           </div>
 
-          {/* Sample Store Preview */}
+          {/* Sample Store Preview - Interactive */}
           <div className="pt-12 animate-slide-up">
-            <div className="bg-card rounded-3xl shadow-apple-lg p-8 max-w-md mx-auto border border-border">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center">
+            <div className="bg-card rounded-3xl shadow-apple-lg p-8 max-w-md mx-auto border border-border transition-all hover:shadow-xl">
+              <div className="flex flex-col items-center space-y-6">
+                {/* Store Profile */}
+                <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center animate-scale-in">
                   <span className="text-3xl">🛍️</span>
                 </div>
-                <div>
+                <div className="text-center">
                   <h3 className="font-semibold text-lg">Cake Cafe</h3>
                   <p className="text-sm text-muted-foreground">Fresh products daily</p>
                 </div>
-                <div className="w-full aspect-square bg-secondary rounded-2xl overflow-hidden">
-                  <div className="w-full h-full flex items-center justify-center text-4xl">
-                    📦
+                
+                {/* Sample Product Card */}
+                <div className="w-full relative bg-secondary rounded-3xl overflow-hidden shadow-apple cursor-pointer hover:shadow-apple-lg transition-all group">
+                  <div className="w-full aspect-square bg-gradient-to-br from-secondary to-muted flex items-center justify-center">
+                    <span className="text-6xl group-hover:scale-110 transition-transform">🎂</span>
+                  </div>
+                  
+                  {/* Floating Bottom Bar */}
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <div className="bg-background/95 backdrop-blur-xl rounded-full px-4 py-2.5 shadow-lg border border-border/50 flex items-center justify-between">
+                      <div className="flex-1 min-w-0 mr-3">
+                        <p className="font-semibold text-sm truncate">Chocolate Cake</p>
+                        <p className="text-xs font-medium text-muted-foreground">₦5,000</p>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-whatsapp flex items-center justify-center flex-shrink-0 shadow-md">
+                        <MessageCircle className="h-4 w-4 text-white" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="w-full text-left">
-                  <p className="font-semibold">Sample Product</p>
-                  <p className="text-muted-foreground">₦5,000</p>
-                </div>
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  Click "Create your store" to get started
+                </p>
               </div>
             </div>
           </div>

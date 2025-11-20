@@ -1,60 +1,120 @@
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Check, MessageCircle } from "lucide-react";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: any;
-  onEdit: (product: any) => void;
-  onDelete: (productId: string) => void;
+  onEdit?: (product: any) => void;
+  onDelete?: (productId: string) => void;
+  onSelect?: (product: any) => void;
+  onWhatsApp?: (product: any) => void;
+  isSelected?: boolean;
+  showActions?: boolean;
+  onClick?: () => void;
 }
 
-const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
+const ProductCard = ({ 
+  product, 
+  onEdit, 
+  onDelete, 
+  onSelect,
+  onWhatsApp,
+  isSelected = false,
+  showActions = false,
+  onClick
+}: ProductCardProps) => {
   const images = product.image_urls || [];
-  const hasMultipleImages = images.length > 1;
+  const hasImage = images.length > 0;
 
   return (
-    <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-apple hover:shadow-apple-lg transition-all">
-      <div className="flex gap-4 p-4">
-        {images.length > 0 && (
-          <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-secondary">
-            <img
-              src={images[0]}
-              alt={product.title}
-              className="w-full h-full object-cover"
-            />
-            {hasMultipleImages && (
-              <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                +{images.length - 1}
-              </div>
-            )}
+    <div 
+      className="relative bg-card rounded-3xl overflow-hidden shadow-apple hover:shadow-apple-lg transition-all cursor-pointer group"
+      onClick={onClick}
+    >
+      {/* Hero Image */}
+      <div className="relative w-full aspect-square bg-secondary">
+        {hasImage ? (
+          <img
+            src={images[0]}
+            alt={product.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-6xl">
+            📦
           </div>
         )}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-lg truncate">{product.title}</h3>
-          {product.price && (
-            <p className="text-muted-foreground font-medium">{product.price}</p>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(product)}
-            className="rounded-full h-9 w-9"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              if (confirm("Delete this product?")) {
-                onDelete(product.id);
-              }
+        
+        {/* Select Button - Top Right */}
+        {onSelect && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(product);
             }}
-            className="rounded-full h-9 w-9 text-destructive hover:text-destructive"
+            className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
+              isSelected 
+                ? "bg-primary text-primary-foreground scale-110" 
+                : "bg-background/95 backdrop-blur-sm text-foreground hover:scale-110"
+            }`}
           >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            {isSelected ? <Check className="h-5 w-5" /> : <span className="text-sm font-medium">+</span>}
+          </button>
+        )}
+
+        {/* Edit/Delete Actions - Show on Dashboard only */}
+        {showActions && (
+          <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(product);
+              }}
+              className="rounded-full h-9 w-9 bg-background/95 backdrop-blur-sm hover:bg-background"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm("Delete this product?")) {
+                  onDelete?.(product.id);
+                }
+              }}
+              className="rounded-full h-9 w-9 bg-background/95 backdrop-blur-sm hover:bg-background text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Floating Bottom Bar - Apple Glass Effect */}
+      <div className="absolute bottom-4 left-4 right-4">
+        <div className="bg-background/95 backdrop-blur-xl rounded-full px-5 py-3 shadow-lg border border-border/50 flex items-center justify-between">
+          <div className="flex-1 min-w-0 mr-3">
+            <h3 className="font-semibold text-base truncate">{product.title}</h3>
+            {product.price && (
+              <p className="text-sm font-medium text-muted-foreground">{product.price}</p>
+            )}
+          </div>
+          
+          {/* WhatsApp Icon */}
+          {onWhatsApp && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onWhatsApp(product);
+              }}
+              className="w-10 h-10 rounded-full bg-whatsapp hover:bg-whatsapp/90 flex items-center justify-center flex-shrink-0 transition-all hover:scale-110 shadow-md"
+            >
+              <MessageCircle className="h-5 w-5 text-white" />
+            </button>
+          )}
         </div>
       </div>
     </div>
