@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Share2, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ProductModal from "@/components/ProductModal";
+import ProductCard from "@/components/ProductCard";
 
 const Storefront = () => {
   const { slug } = useParams();
@@ -164,46 +165,18 @@ const Storefront = () => {
             <p className="text-muted-foreground">No products available yet</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {products.map((product, index) => (
               <div
                 key={product.id}
-                className="bg-card rounded-3xl overflow-hidden shadow-apple-lg border border-border cursor-pointer transition-all hover:shadow-xl hover:scale-[1.02] animate-scale-in"
+                className="animate-scale-in"
                 style={{ animationDelay: `${index * 100}ms` }}
-                onClick={() => setSelectedProduct(product)}
               >
-                {(product.image_urls && product.image_urls.length > 0) && (
-                  <div className="w-full aspect-square overflow-hidden">
-                    <img
-                      src={product.image_urls[0]}
-                      alt={product.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold">{product.title}</h3>
-                    {product.price && (
-                      <p className="text-xl font-bold">{product.price}</p>
-                    )}
-                  </div>
-                  {product.description && (
-                    <p className="text-muted-foreground mb-4 line-clamp-2">
-                      {product.description}
-                    </p>
-                  )}
-                  <Button
-                    className="w-full rounded-full bg-whatsapp hover:bg-whatsapp/90 text-white"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleWhatsApp(product);
-                    }}
-                  >
-                    <MessageCircle className="mr-2 h-5 w-5" />
-                    DM to order on WhatsApp
-                  </Button>
-                </div>
+                <ProductCard
+                  product={product}
+                  onClick={() => setSelectedProduct(product)}
+                  onWhatsApp={handleWhatsApp}
+                />
               </div>
             ))}
           </div>
