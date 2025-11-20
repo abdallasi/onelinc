@@ -30,9 +30,10 @@ const ProductCard = ({
     <div 
       className="relative bg-card rounded-3xl overflow-hidden shadow-apple hover:shadow-apple-lg transition-all cursor-pointer group"
       onClick={onClick}
+      style={{ height: '110%' }}
     >
       {/* Hero Image */}
-      <div className="relative w-full aspect-square bg-secondary">
+      <div className="relative w-full h-full bg-secondary">
         {hasImage ? (
           <img
             src={images[0]}
@@ -45,20 +46,20 @@ const ProductCard = ({
           </div>
         )}
         
-        {/* Select Button - Top Right */}
+        {/* Apple-style Select Button - Top Right */}
         {onSelect && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               onSelect(product);
             }}
-            className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
+            className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center shadow-apple transition-all ${
               isSelected 
-                ? "bg-primary text-primary-foreground scale-110" 
-                : "bg-background/95 backdrop-blur-sm text-foreground hover:scale-110"
+                ? "bg-primary border-2 border-primary" 
+                : "bg-background/90 backdrop-blur-sm border-2 border-border hover:border-primary"
             }`}
           >
-            {isSelected ? <Check className="h-5 w-5" /> : <span className="text-sm font-medium">+</span>}
+            {isSelected && <Check className="h-4 w-4 text-primary-foreground" />}
           </button>
         )}
 
@@ -95,24 +96,24 @@ const ProductCard = ({
 
       {/* Floating Bottom Bar - Apple Glass Effect */}
       <div className="absolute bottom-4 left-4 right-4">
-        <div className="bg-background/95 backdrop-blur-xl rounded-full px-5 py-3 shadow-lg border border-border/50 flex items-center justify-between">
+        <div className="bg-background/60 backdrop-blur-xl rounded-full px-5 py-3 shadow-apple border border-border/30 flex items-center justify-between">
           <div className="flex-1 min-w-0 mr-3">
-            <h3 className="font-semibold text-base truncate">{product.title}</h3>
+            <p className="text-xs font-normal text-muted-foreground truncate">{product.title}</p>
             {product.price && (
-              <p className="text-sm font-medium text-muted-foreground">{product.price}</p>
+              <h3 className="text-base font-semibold text-foreground">{product.price}</h3>
             )}
           </div>
           
-          {/* WhatsApp Icon */}
+          {/* WhatsApp Text Button */}
           {onWhatsApp && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onWhatsApp(product);
               }}
-              className="w-10 h-10 rounded-full bg-whatsapp hover:bg-whatsapp/90 flex items-center justify-center flex-shrink-0 transition-all hover:scale-110 shadow-md"
+              className="px-4 py-2 rounded-full bg-foreground hover:bg-foreground/90 text-background text-xs font-medium flex-shrink-0 transition-all hover:scale-105 shadow-apple"
             >
-              <MessageCircle className="h-5 w-5 text-white" />
+              dm on whatsapp
             </button>
           )}
         </div>
