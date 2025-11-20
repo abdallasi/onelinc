@@ -28,7 +28,7 @@ const ProductCard = ({
 
   return (
     <div 
-      className="relative bg-card rounded-3xl overflow-hidden shadow-apple hover:shadow-apple-lg transition-all cursor-pointer group h-[410px]"
+      className="relative bg-card rounded-3xl overflow-hidden shadow-apple hover:shadow-apple-lg transition-all cursor-pointer group h-[400px]"
       onClick={onClick}
     >
       {/* Hero Image */}
