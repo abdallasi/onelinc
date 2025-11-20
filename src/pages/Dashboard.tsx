@@ -357,6 +357,7 @@ const Dashboard = () => {
                     product={product}
                     onEdit={handleEditProduct}
                     onDelete={handleDeleteProduct}
+                    showActions={true}
                   />
                 ))}
               </div>
