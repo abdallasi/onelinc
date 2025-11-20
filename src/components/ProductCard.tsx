@@ -28,9 +28,8 @@ const ProductCard = ({
 
   return (
     <div 
-      className="relative bg-card rounded-3xl overflow-hidden shadow-apple hover:shadow-apple-lg transition-all cursor-pointer group"
+      className="relative bg-card rounded-3xl overflow-hidden shadow-apple hover:shadow-apple-lg transition-all cursor-pointer group h-[420px]"
       onClick={onClick}
-      style={{ height: '110%' }}
     >
       {/* Hero Image */}
       <div className="relative w-full h-full bg-secondary">
@@ -48,19 +47,24 @@ const ProductCard = ({
         
         {/* Apple-style Select Button - Top Right */}
         {onSelect && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(product);
-            }}
-            className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center shadow-apple transition-all ${
-              isSelected 
-                ? "bg-primary border-2 border-primary" 
-                : "bg-background/90 backdrop-blur-sm border-2 border-border hover:border-primary"
-            }`}
-          >
-            {isSelected && <Check className="h-4 w-4 text-primary-foreground" />}
-          </button>
+          <div className="absolute top-3 right-3 flex flex-col items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(product);
+              }}
+              className={`w-6 h-6 rounded-full flex items-center justify-center shadow-apple transition-all ${
+                isSelected 
+                  ? "bg-primary border-2 border-primary" 
+                  : "bg-background/90 backdrop-blur-sm border-2 border-border hover:border-primary"
+              }`}
+            >
+              {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+            </button>
+            <span className="text-[9px] font-medium text-foreground/60 bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
+              select
+            </span>
+          </div>
         )}
 
         {/* Edit/Delete Actions - Show on Dashboard only */}
