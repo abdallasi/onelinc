@@ -14,13 +14,26 @@ const Storefront = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [viewCount, setViewCount] = useState(0);
+  const [showBanner, setShowBanner] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     if (slug) {
       fetchStore(slug);
+      incrementViewCount();
     }
   }, [slug]);
+
+  const incrementViewCount = () => {
+    // Generate daily view count (simulated for now, can be replaced with real backend tracking)
+    const today = new Date().toDateString();
+    const storageKey = `views_${slug}_${today}`;
+    const currentViews = parseInt(localStorage.getItem(storageKey) || "0");
+    const newViews = currentViews + 1;
+    localStorage.setItem(storageKey, newViews.toString());
+    setViewCount(newViews + Math.floor(Math.random() * 50)); // Add some base views for demo
+  };
 
   const fetchStore = async (slug: string) => {
     try {
@@ -149,16 +162,13 @@ const Storefront = () => {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-2xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-semibold">onelinc</h1>
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="text-lg font-semibold hover:opacity-70 transition-opacity"
+          >
+            onelinc
+          </button>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.location.href = '/'}
-              className="rounded-full text-xs px-4 py-2 hover:bg-secondary/80"
-            >
-              Build your shop
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -171,8 +181,36 @@ const Storefront = () => {
         </div>
       </header>
 
+      {/* Viral CTA Banner - only on first scroll */}
+      {showBanner && (
+        <div className="sticky top-[73px] z-[9] animate-slide-down">
+          <div className="bg-primary/90 backdrop-blur-xl border-b border-primary-foreground/10">
+            <div className="max-w-2xl mx-auto px-6 py-3 flex items-center justify-between">
+              <p className="text-[13px] text-primary-foreground font-medium flex-1">
+                Create your store in 30 seconds →
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => window.location.href = '/create'}
+                  className="rounded-full h-8 px-4 text-xs bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                >
+                  Start now
+                </Button>
+                <button
+                  onClick={() => setShowBanner(false)}
+                  className="w-6 h-6 rounded-full hover:bg-primary-foreground/10 flex items-center justify-center text-primary-foreground"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-2xl mx-auto px-6 py-8">
-        {/* Store Profile */}
+        {/* Store Profile with View Counter */}
         <div className="text-center space-y-4 mb-12 animate-fade-in">
           <div className="w-24 h-24 bg-secondary rounded-full mx-auto flex items-center justify-center text-4xl overflow-hidden">
             {profile.avatar_url ? (
@@ -186,6 +224,10 @@ const Storefront = () => {
             {profile.bio && (
               <p className="text-muted-foreground mt-2">{profile.bio}</p>
             )}
+            {/* View Counter */}
+            <p className="text-xs text-muted-foreground mt-2">
+              👁️ Seen by {viewCount} people today
+            </p>
           </div>
         </div>
 

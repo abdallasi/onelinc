@@ -67,56 +67,76 @@ const Paywall = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
-      <div className="max-w-md w-full text-center space-y-8 animate-scale-in">
+      <div className="max-w-lg w-full text-center space-y-8 animate-scale-in">
+        {/* Logo - clickable */}
+        <button 
+          onClick={() => navigate("/")}
+          className="text-2xl font-semibold hover:opacity-70 transition-opacity mx-auto block"
+        >
+          onelinc
+        </button>
+
         <div className="space-y-4">
-          <div className="w-20 h-20 bg-accent/10 rounded-full mx-auto flex items-center justify-center">
-            <Sparkles className="h-10 w-10 text-accent" />
+          <div className="w-20 h-20 bg-primary/5 rounded-full mx-auto flex items-center justify-center">
+            <Sparkles className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-4xl font-bold">
-            Unlock Unlimited Products
+          <h1 className="text-[44px] font-bold leading-tight tracking-tight">
+            Unlock Unlimited
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-[17px] text-muted-foreground leading-snug">
             Add your 4th product and grow without limits.
           </p>
         </div>
 
-        <div className="bg-card rounded-3xl border border-border p-8 shadow-apple-lg">
-          <div className="space-y-6">
+        <div className="bg-card/50 backdrop-blur-xl rounded-[28px] border border-border/50 p-8 shadow-apple-lg">
+          <div className="space-y-8">
             <div>
-              <p className="text-5xl font-bold">₦3,000</p>
-              <p className="text-muted-foreground">per month</p>
+              <p className="text-[56px] font-semibold tracking-tight">₦3,000</p>
+              <p className="text-[15px] text-muted-foreground">per month</p>
             </div>
 
-            <div className="space-y-3 text-left">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <Check className="h-4 w-4 text-accent" />
+            <div className="space-y-4 text-left">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="h-4 w-4 text-primary" />
                 </div>
-                <p>Unlimited products</p>
+                <div>
+                  <p className="font-medium text-[15px]">Unlimited products</p>
+                  <p className="text-[13px] text-muted-foreground">No restrictions on your catalog</p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <Check className="h-4 w-4 text-accent" />
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="h-4 w-4 text-primary" />
                 </div>
-                <p>Custom branding</p>
+                <div>
+                  <p className="font-medium text-[15px]">Custom branding</p>
+                  <p className="text-[13px] text-muted-foreground">Make it truly yours</p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <Check className="h-4 w-4 text-accent" />
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="h-4 w-4 text-primary" />
                 </div>
-                <p>Priority support</p>
+                <div>
+                  <p className="font-medium text-[15px]">Priority support</p>
+                  <p className="text-[13px] text-muted-foreground">Get help when you need it</p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <Check className="h-4 w-4 text-accent" />
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="h-4 w-4 text-primary" />
                 </div>
-                <p>Analytics dashboard</p>
+                <div>
+                  <p className="font-medium text-[15px]">Analytics dashboard</p>
+                  <p className="text-[13px] text-muted-foreground">Track your success</p>
+                </div>
               </div>
             </div>
 
             <Button
               size="lg"
-              className="w-full py-6 rounded-full shadow-apple text-lg"
+              className="w-full h-[52px] rounded-[14px] shadow-sm text-[15px] font-semibold hover:scale-[1.01] active:scale-[0.99] transition-transform"
               onClick={handleUpgrade}
               disabled={loading}
             >
@@ -132,7 +152,7 @@ const Paywall = () => {
 
             <Button
               variant="ghost"
-              className="w-full"
+              className="w-full h-[44px] text-[15px]"
               onClick={() => navigate("/dashboard")}
             >
               Maybe later

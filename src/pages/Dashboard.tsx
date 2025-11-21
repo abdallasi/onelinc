@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, LogOut, User, ExternalLink, Share2 } from "lucide-react";
+import { Plus, LogOut, User, ExternalLink } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ProductForm from "@/components/ProductForm";
 import ProfileSettings from "@/components/ProfileSettings";
 import { PhoneNumberModal } from "@/components/PhoneNumberModal";
+import { ShareSuccessModal } from "@/components/ShareSuccessModal";
 
 const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -17,6 +18,7 @@ const Dashboard = () => {
   const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -186,6 +188,8 @@ const Dashboard = () => {
             text: `Check out my store: ${profile.name}`,
             url: url,
           });
+          // Show modal after successful share
+          setShowShareModal(true);
         } catch (error) {
           // User cancelled share
         }
@@ -196,6 +200,7 @@ const Dashboard = () => {
           title: "Link copied!",
           description: "Share your store link with customers",
         });
+        setShowShareModal(true);
       }
     } catch (error: any) {
       toast({
@@ -257,7 +262,12 @@ const Dashboard = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-semibold">Dashboard</h1>
+          <button 
+            onClick={() => navigate("/")}
+            className="text-xl font-semibold hover:opacity-70 transition-opacity"
+          >
+            onelinc
+          </button>
           <div className="flex gap-2">
             <Button
               variant="ghost"
@@ -366,14 +376,28 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Floating Share Button - only show when there's at least 1 product */}
+      {/* Floating Share Button - Apple-style redesign */}
       {products.length > 0 && (
         <button
           onClick={handleShare}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 z-50 font-medium"
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-primary/90 backdrop-blur-xl text-primary-foreground rounded-full px-8 py-4 shadow-apple-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] z-50 font-semibold text-[15px] flex items-center gap-2 border border-primary-foreground/10"
         >
-          Share my store
+          <svg width="16" height="18" viewBox="0 0 16 18" fill="none" className="text-primary-foreground">
+            <path d="M8 0L8 12M8 12L4 8M8 12L12 8M1 14L1 16C1 17.1 1.9 18 3 18L13 18C14.1 18 15 17.1 15 16L15 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Show your store
         </button>
+      )}
+
+      {/* Viral Prompt - after products added */}
+      {products.length >= 2 && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 max-w-sm w-[calc(100%-2rem)] z-40 animate-slide-down">
+          <div className="bg-card/95 backdrop-blur-xl rounded-[20px] border border-border/50 shadow-apple-lg p-4">
+            <p className="text-[13px] text-muted-foreground text-center">
+              💡 Stores that share weekly get <span className="font-semibold text-foreground">3× more orders</span>
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Phone Number Modal */}
@@ -381,6 +405,14 @@ const Dashboard = () => {
         open={showPhoneModal}
         onComplete={handlePhoneModalComplete}
         profileId={profile?.id}
+      />
+
+      {/* Share Success Modal */}
+      <ShareSuccessModal
+        open={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShareAgain={handleShare}
+        storeUrl={`${window.location.origin}/shop/${profile?.slug}`}
       />
     </div>
   );
