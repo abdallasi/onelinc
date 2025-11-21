@@ -6,19 +6,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { X } from "lucide-react";
 
 const phoneSchema = z.string().regex(/^\+?[1-9]\d{9,14}$/, "Please enter a valid phone number");
 
 const countries = [
-  { code: "+234", name: "Nigeria", flag: "🇳🇬" },
-  { code: "+1", name: "USA", flag: "🇺🇸" },
-  { code: "+44", name: "UK", flag: "🇬🇧" },
-  { code: "+91", name: "India", flag: "🇮🇳" },
-  { code: "+86", name: "China", flag: "🇨🇳" },
-  { code: "+27", name: "South Africa", flag: "🇿🇦" },
-  { code: "+254", name: "Kenya", flag: "🇰🇪" },
-  { code: "+233", name: "Ghana", flag: "🇬🇭" },
+  { code: "+234", name: "Nigeria", flag: "🇳🇬", format: "### ### ####" },
+  { code: "+1", name: "USA", flag: "🇺🇸", format: "(###) ###-####" },
+  { code: "+44", name: "UK", flag: "🇬🇧", format: "#### ### ####" },
+  { code: "+91", name: "India", flag: "🇮🇳", format: "##### #####" },
+  { code: "+86", name: "China", flag: "🇨🇳", format: "### #### ####" },
+  { code: "+27", name: "South Africa", flag: "🇿🇦", format: "## ### ####" },
+  { code: "+254", name: "Kenya", flag: "🇰🇪", format: "### ######" },
+  { code: "+233", name: "Ghana", flag: "🇬🇭", format: "## ### ####" },
 ];
+
+// Auto-detect country from timezone/locale
+const detectCountry = (): string => {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const locale = navigator.language;
+    
+    // Map common timezones to country codes
+    if (timezone.includes("Lagos") || timezone.includes("Africa") && locale.includes("en-NG")) return "+234";
+    if (timezone.includes("America") || locale.includes("en-US")) return "+1";
+    if (timezone.includes("Europe/London") || locale.includes("en-GB")) return "+44";
+    if (timezone.includes("Asia/Kolkata") || locale.includes("en-IN")) return "+91";
+    if (timezone.includes("Asia/Shanghai") || locale.includes("zh")) return "+86";
+    if (timezone.includes("Africa/Johannesburg")) return "+27";
+    if (timezone.includes("Africa/Nairobi")) return "+254";
+    if (timezone.includes("Africa/Accra")) return "+233";
+    
+    // Default to Nigeria
+    return "+234";
+  } catch {
+    return "+234";
+  }
+};
 
 interface PhoneNumberModalProps {
   open: boolean;
@@ -27,35 +51,42 @@ interface PhoneNumberModalProps {
 }
 
 export const PhoneNumberModal = ({ open, onComplete, profileId }: PhoneNumberModalProps) => {
-  const [countryCode, setCountryCode] = useState("+234");
+  const [countryCode, setCountryCode] = useState(detectCountry());
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const adjustForKeyboard = () => {
-      const viewport = window.visualViewport;
-      if (viewport) {
-        const offsetTop = viewport.height < window.innerHeight ? viewport.height * 0.1 : 0;
-        document.documentElement.style.setProperty('--keyboard-offset', `${offsetTop}px`);
+  // Format phone number as user types
+  const formatPhoneNumber = (value: string, format: string) => {
+    const numbers = value.replace(/\D/g, '');
+    let formatted = '';
+    let numIndex = 0;
+    
+    for (let i = 0; i < format.length && numIndex < numbers.length; i++) {
+      if (format[i] === '#') {
+        formatted += numbers[numIndex];
+        numIndex++;
+      } else {
+        formatted += format[i];
       }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', adjustForKeyboard);
-      window.visualViewport.addEventListener('scroll', adjustForKeyboard);
     }
+    
+    return formatted;
+  };
 
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', adjustForKeyboard);
-        window.visualViewport.removeEventListener('scroll', adjustForKeyboard);
-      }
-    };
-  }, [open]);
+  const handlePhoneChange = (value: string) => {
+    const country = countries.find(c => c.code === countryCode);
+    if (country) {
+      const formatted = formatPhoneNumber(value, country.format);
+      setPhoneNumber(formatted);
+    } else {
+      setPhoneNumber(value.replace(/\D/g, ''));
+    }
+  };
 
   const handleSubmit = async () => {
-    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    const fullPhoneNumber = `${countryCode}${cleanNumber}`;
     
     try {
       phoneSchema.parse(fullPhoneNumber);
@@ -80,6 +111,7 @@ export const PhoneNumberModal = ({ open, onComplete, profileId }: PhoneNumberMod
 
       toast({
         title: "Phone number saved!",
+        description: "Customers can now reach you on WhatsApp",
       });
 
       onComplete();
@@ -94,16 +126,16 @@ export const PhoneNumberModal = ({ open, onComplete, profileId }: PhoneNumberMod
     }
   };
 
-
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-[256px] max-w-[256px] rounded-3xl border-none shadow-2xl fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 ease-out" style={{ transform: 'translate(-50%, calc(-50% - var(--keyboard-offset, 0px)))' }}>
-        <DialogHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-1">
+      <DialogContent className="sm:max-w-[360px] max-w-[360px] rounded-[24px] border border-border/50 shadow-2xl backdrop-blur-xl p-0 overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="p-6 pb-4 text-center space-y-3">
+          <div className="mx-auto w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="28"
+              height="28"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -115,23 +147,27 @@ export const PhoneNumberModal = ({ open, onComplete, profileId }: PhoneNumberMod
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
           </div>
-          <DialogTitle className="text-lg font-semibold">Add your phone number</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            Help customers reach you easily
-          </DialogDescription>
+          <div>
+            <DialogTitle className="text-[22px] font-semibold tracking-tight">Your WhatsApp Number</DialogTitle>
+            <DialogDescription className="text-[13px] text-muted-foreground mt-1.5">
+              For users to contact your WhatsApp.
+            </DialogDescription>
+          </div>
         </DialogHeader>
         
-        <div className="space-y-3 mt-3">
+        {/* Form */}
+        <div className="px-6 pb-6 space-y-4">
+          {/* Country Selector */}
           <Select value={countryCode} onValueChange={setCountryCode}>
-            <SelectTrigger className="rounded-xl bg-background/50">
+            <SelectTrigger className="h-[52px] rounded-[14px] bg-muted/30 border-border/50 text-[15px]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-[14px]">
               {countries.map((country) => (
-                <SelectItem key={country.code} value={country.code}>
-                  <span className="flex items-center gap-2">
-                    <span>{country.flag}</span>
-                    <span>{country.name}</span>
+                <SelectItem key={country.code} value={country.code} className="text-[15px]">
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-[18px]">{country.flag}</span>
+                    <span className="font-medium">{country.name}</span>
                     <span className="text-muted-foreground">{country.code}</span>
                   </span>
                 </SelectItem>
@@ -139,24 +175,36 @@ export const PhoneNumberModal = ({ open, onComplete, profileId }: PhoneNumberMod
             </SelectContent>
           </Select>
           
-          <div className="flex gap-2">
-            <div className="flex items-center justify-center px-3 rounded-xl bg-muted/50 text-sm font-medium">
+          {/* Phone Input */}
+          <div className="flex gap-2.5">
+            <div className="flex items-center justify-center px-4 rounded-[14px] bg-muted/30 border border-border/50 text-[15px] font-medium min-w-[70px]">
               {countryCode}
             </div>
-            <Input
-              type="tel"
-              placeholder="800 000 0000"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-              className="flex-1 py-5 text-center rounded-xl"
-              disabled={isLoading}
-            />
+            <div className="relative flex-1">
+              <Input
+                type="tel"
+                placeholder={countries.find(c => c.code === countryCode)?.format || "800 000 0000"}
+                value={phoneNumber}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                className="h-[52px] rounded-[14px] bg-muted/30 border-border/50 text-[15px] pr-10"
+                disabled={isLoading}
+              />
+              {phoneNumber && (
+                <button
+                  onClick={() => setPhoneNumber("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-muted-foreground/20 flex items-center justify-center hover:bg-muted-foreground/30 transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
           </div>
           
+          {/* Submit Button */}
           <Button
             onClick={handleSubmit}
             disabled={isLoading || !phoneNumber}
-            className="w-full py-5 rounded-xl font-semibold"
+            className="w-full h-[52px] rounded-[14px] font-semibold text-[15px] shadow-sm hover:shadow transition-all hover:scale-[1.01] active:scale-[0.99]"
           >
             {isLoading ? "Saving..." : "Continue"}
           </Button>

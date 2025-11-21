@@ -9,7 +9,12 @@ const Home = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="w-full py-4 px-6 flex justify-between items-center">
-        <h2 className="text-xl font-semibold">onelinc</h2>
+        <button 
+          onClick={() => navigate("/")}
+          className="text-xl font-semibold hover:opacity-70 transition-opacity"
+        >
+          onelinc
+        </button>
         <Button 
           variant="ghost" 
           onClick={() => navigate("/auth")}

@@ -168,60 +168,68 @@ const Auth = () => {
         profileId={newProfileId || ""}
       />
       
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
-      <div className="max-w-md w-full">
-        <div className="bg-card rounded-3xl shadow-apple-lg p-8 border border-border animate-scale-in">
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl font-bold">
-                {isSignUp ? "Create account" : "Welcome back"}
-              </h1>
-              <p className="text-muted-foreground">
-                {isSignUp ? "Start your store journey" : "Sign in to your account"}
-              </p>
-            </div>
+      <div className="min-h-screen bg-background flex items-center justify-center px-6 relative">
+        {/* Logo - clickable */}
+        <button 
+          onClick={() => navigate("/")}
+          className="absolute top-6 left-6 text-xl font-semibold hover:opacity-70 transition-opacity"
+        >
+          onelinc
+        </button>
 
-            <div className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="py-5 rounded-xl"
-              />
+        <div className="max-w-md w-full">
+          <div className="bg-card rounded-3xl shadow-apple-lg p-8 border border-border animate-scale-in">
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <h1 className="text-3xl font-bold">
+                  {isSignUp ? "Create account" : "Welcome back"}
+                </h1>
+                <p className="text-muted-foreground">
+                  {isSignUp ? "Start your store journey" : "Sign in to your account"}
+                </p>
+              </div>
 
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="py-5 rounded-xl"
-                onKeyPress={(e) => e.key === "Enter" && handleAuth()}
-              />
+              <div className="space-y-4">
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="py-5 rounded-xl"
+                />
 
-              <Button
-                size="lg"
-                className="w-full py-6 rounded-full shadow-apple"
-                onClick={handleAuth}
-                disabled={isLoading}
-              >
-                {isLoading ? "Loading..." : isSignUp ? "Sign up" : "Sign in"}
-              </Button>
-            </div>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="py-5 rounded-xl"
+                  onKeyPress={(e) => e.key === "Enter" && handleAuth()}
+                />
 
-            <div className="text-center">
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {isSignUp
-                  ? "Already have an account? Sign in"
-                  : "Don't have an account? Sign up"}
-              </button>
+                <Button
+                  size="lg"
+                  className="w-full py-6 rounded-full shadow-apple hover:scale-[1.01] active:scale-[0.99] transition-transform"
+                  onClick={handleAuth}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Loading..." : isSignUp ? "Sign up" : "Sign in"}
+                </Button>
+              </div>
+
+              <div className="text-center">
+                <button
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {isSignUp
+                    ? "Already have an account? Sign in"
+                    : "Don't have an account? Sign up"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     </>
   );
