@@ -29,12 +29,12 @@ const Home = () => {
           {/* Headline */}
           <div className="space-y-4">
             <h1 className="text-[3.2rem] md:text-[3.7rem] font-bold tracking-tight leading-tight">
-              Your shop.
-              <br />
               One link.
+              <br />
+              One store.
             </h1>
             <p className="text-[1.1rem] md:text-[1.3rem] text-muted-foreground max-w-2xl mx-auto">
-              Create a clean product page your customers actually trust.
+              For sellers who hate bullshit.
             </p>
           </div>
 

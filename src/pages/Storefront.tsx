@@ -224,10 +224,6 @@ const Storefront = () => {
             {profile.bio && (
               <p className="text-muted-foreground mt-2">{profile.bio}</p>
             )}
-            {/* View Counter */}
-            <p className="text-xs text-muted-foreground mt-2">
-              👁️ Seen by {viewCount} people today
-            </p>
           </div>
         </div>
 
