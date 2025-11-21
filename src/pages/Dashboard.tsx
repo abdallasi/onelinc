@@ -19,8 +19,18 @@ const Dashboard = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareTip, setShowShareTip] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (showShareTip) {
+      const timer = setTimeout(() => {
+        setShowShareTip(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showShareTip]);
 
   useEffect(() => {
     checkAuth();
@@ -385,12 +395,12 @@ const Dashboard = () => {
           <svg width="16" height="18" viewBox="0 0 16 18" fill="none" className="text-primary-foreground">
             <path d="M8 0L8 12M8 12L4 8M8 12L12 8M1 14L1 16C1 17.1 1.9 18 3 18L13 18C14.1 18 15 17.1 15 16L15 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          Show your store
+          Share
         </button>
       )}
 
       {/* Viral Prompt - after products added */}
-      {products.length >= 2 && (
+      {products.length >= 2 && showShareTip && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 max-w-sm w-[calc(100%-2rem)] z-40 animate-slide-down">
           <div className="bg-card/95 backdrop-blur-xl rounded-[20px] border border-border/50 shadow-apple-lg p-4">
             <p className="text-[13px] text-muted-foreground text-center">
