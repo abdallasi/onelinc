@@ -139,7 +139,7 @@ const Dashboard = () => {
   };
 
   const handleAddProduct = () => {
-    if (products.length >= 3) {
+    if (products.length >= 10) {
       navigate("/paywall");
       return;
     }
