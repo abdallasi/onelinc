@@ -168,7 +168,13 @@ const Storefront = () => {
           >
             onelinc
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.location.href = '/'}
+              className="text-sm font-medium text-primary hover:opacity-70 transition-opacity"
+            >
+              Build your store
+            </button>
             <Button
               variant="ghost"
               size="icon"
@@ -181,33 +187,6 @@ const Storefront = () => {
         </div>
       </header>
 
-      {/* Viral CTA Banner - only on first scroll */}
-      {showBanner && (
-        <div className="sticky top-[73px] z-[9] animate-slide-down">
-          <div className="bg-primary/90 backdrop-blur-xl border-b border-primary-foreground/10">
-            <div className="max-w-2xl mx-auto px-6 py-3 flex items-center justify-between">
-              <p className="text-[13px] text-primary-foreground font-medium flex-1">
-                Create your store in 30 seconds →
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => window.location.href = '/create'}
-                  className="rounded-full h-8 px-4 text-xs bg-primary-foreground text-primary hover:bg-primary-foreground/90"
-                >
-                  Start now
-                </Button>
-                <button
-                  onClick={() => setShowBanner(false)}
-                  className="w-6 h-6 rounded-full hover:bg-primary-foreground/10 flex items-center justify-center text-primary-foreground"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <main className="max-w-2xl mx-auto px-6 py-8">
         {/* Store Profile with View Counter */}

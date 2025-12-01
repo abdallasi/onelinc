@@ -19,6 +19,11 @@ interface Metrics {
   paidConversionsLast7Days: number;
   dailyActiveShops: number;
   churn: number;
+  activationRate: number;
+  conversionToPaid: number;
+  week1Retention: number;
+  week4Retention: number;
+  avgTimeToFirstProduct: string;
 }
 
 interface ChartData {
@@ -132,6 +137,86 @@ export default function Warroom() {
         .eq("status", "inactive")
         .gte("updated_at", thirtyDaysAgo.toISOString());
 
+      // Activation Rate (users with at least 1 product / total users)
+      const activationRate = totalUsers ? ((activeShops / totalUsers) * 100).toFixed(1) : "0";
+
+      // Conversion to Paid (paid users / total users)
+      const conversionToPaid = totalUsers ? ((paidUsers || 0) / totalUsers * 100).toFixed(1) : "0";
+
+      // Week 1 Retention (users still active after 7 days)
+      const eightDaysAgo = new Date();
+      eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+      
+      const { data: week1Cohort } = await supabase
+        .from("profiles")
+        .select("id")
+        .gte("created_at", fifteenDaysAgo.toISOString())
+        .lte("created_at", eightDaysAgo.toISOString());
+      
+      const { data: week1Active } = await supabase
+        .from("cards")
+        .select("profile_id")
+        .in("profile_id", week1Cohort?.map(p => p.id) || [])
+        .gte("updated_at", eightDaysAgo.toISOString());
+      
+      const week1RetainedUsers = new Set(week1Active?.map(c => c.profile_id) || []).size;
+      const week1Retention = week1Cohort?.length ? ((week1RetainedUsers / week1Cohort.length) * 100).toFixed(1) : "0";
+
+      // Week 4 Retention
+      const twentyEightDaysAgo = new Date();
+      twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
+      const thirtyFiveDaysAgo = new Date();
+      thirtyFiveDaysAgo.setDate(thirtyFiveDaysAgo.getDate() - 35);
+      
+      const { data: week4Cohort } = await supabase
+        .from("profiles")
+        .select("id")
+        .gte("created_at", thirtyFiveDaysAgo.toISOString())
+        .lte("created_at", twentyEightDaysAgo.toISOString());
+      
+      const { data: week4Active } = await supabase
+        .from("cards")
+        .select("profile_id")
+        .in("profile_id", week4Cohort?.map(p => p.id) || [])
+        .gte("updated_at", twentyEightDaysAgo.toISOString());
+      
+      const week4RetainedUsers = new Set(week4Active?.map(c => c.profile_id) || []).size;
+      const week4Retention = week4Cohort?.length ? ((week4RetainedUsers / week4Cohort.length) * 100).toFixed(1) : "0";
+
+      // Average time to first product upload
+      const { data: firstProducts } = await supabase
+        .from("cards")
+        .select("created_at, profile_id");
+      
+      const { data: allProfiles } = await supabase
+        .from("profiles")
+        .select("id, created_at");
+      
+      let totalMinutes = 0;
+      let count = 0;
+      
+      firstProducts?.forEach(product => {
+        const profile = allProfiles?.find(p => p.id === product.profile_id);
+        if (profile) {
+          const profileTime = new Date(profile.created_at).getTime();
+          const productTime = new Date(product.created_at).getTime();
+          const diffMinutes = (productTime - profileTime) / (1000 * 60);
+          if (diffMinutes >= 0 && diffMinutes < 60 * 24 * 7) { // Within 7 days
+            totalMinutes += diffMinutes;
+            count++;
+          }
+        }
+      });
+      
+      const avgMinutes = count > 0 ? totalMinutes / count : 0;
+      const avgTimeToFirstProduct = avgMinutes < 60 
+        ? `${Math.round(avgMinutes)}m`
+        : avgMinutes < 1440
+        ? `${Math.round(avgMinutes / 60)}h`
+        : `${Math.round(avgMinutes / 1440)}d`;
+
       setMetrics({
         totalUsers: 368,
         paidUsers: 85,
@@ -141,6 +226,11 @@ export default function Warroom() {
         paidConversionsLast7Days: paidConversionsLast7Days || 0,
         dailyActiveShops,
         churn: churn || 0,
+        activationRate: parseFloat(activationRate),
+        conversionToPaid: parseFloat(conversionToPaid),
+        week1Retention: parseFloat(week1Retention),
+        week4Retention: parseFloat(week4Retention),
+        avgTimeToFirstProduct,
       });
 
       // Fetch chart data
@@ -308,10 +398,63 @@ export default function Warroom() {
 
         {/* Secondary Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SmallMetricCard title="Activation Rate" value={`${metrics.activationRate}%`} />
+          <SmallMetricCard title="Conversion" value={`${metrics.conversionToPaid}%`} />
+          <SmallMetricCard title="Week 1 Retention" value={`${metrics.week1Retention}%`} />
+          <SmallMetricCard title="Week 4 Retention" value={`${metrics.week4Retention}%`} />
+        </div>
+
+        {/* Additional Metrics */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <SmallMetricCard title="Signups (7d)" value={metrics.signupsLast7Days} />
           <SmallMetricCard title="Paid (7d)" value={metrics.paidConversionsLast7Days} />
           <SmallMetricCard title="Daily Active" value={metrics.dailyActiveShops} />
-          <SmallMetricCard title="Churn (30d)" value={metrics.churn} />
+          <SmallMetricCard title="Time to 1st Product" value={metrics.avgTimeToFirstProduct} />
+        </div>
+
+        {/* FOMO / Aspirational Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-6 border-none shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">🏆 Top Stores Today</h3>
+            <div className="space-y-3">
+              {users.slice(0, 5).map((user, idx) => (
+                <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-muted-foreground w-6">#{idx + 1}</span>
+                    <div>
+                      <p className="font-medium text-sm">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.products_count} products</p>
+                    </div>
+                  </div>
+                  {user.is_paid && (
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Pro</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-6 border-none shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">📈 Fastest Growing</h3>
+            <div className="space-y-3">
+              {users
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 5)
+                .map((user, idx) => (
+                  <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-muted-foreground w-6">#{idx + 1}</span>
+                      <div>
+                        <p className="font-medium text-sm">{user.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Joined {new Date(user.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </Card>
         </div>
 
         {/* Charts */}
@@ -442,11 +585,11 @@ function MetricCard({ title, value, sparkline }: { title: string; value: string 
   );
 }
 
-function SmallMetricCard({ title, value }: { title: string; value: number }) {
+function SmallMetricCard({ title, value }: { title: string; value: number | string }) {
   return (
     <Card className="p-4 border-none shadow-md hover:shadow-lg transition-all active:scale-[0.98] animate-scale-in">
       <p className="text-xs text-muted-foreground font-medium mb-1">{title}</p>
-      <p className="text-2xl font-bold tracking-tight">{value}</p>
+      <p className="text-2xl font-bold tracking-tight">{typeof value === 'number' ? value : value}</p>
     </Card>
   );
 }
