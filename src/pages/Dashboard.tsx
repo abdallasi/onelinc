@@ -395,7 +395,7 @@ const Dashboard = () => {
           <svg width="16" height="18" viewBox="0 0 16 18" fill="none" className="text-primary-foreground">
             <path d="M8 0L8 12M8 12L4 8M8 12L12 8M1 14L1 16C1 17.1 1.9 18 3 18L13 18C14.1 18 15 17.1 15 16L15 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          Share
+          Share Link
         </button>
       )}
 
