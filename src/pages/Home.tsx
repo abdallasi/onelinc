@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -11,6 +11,49 @@ const Home = () => {
   const { toast } = useToast();
   const [shopName, setShopName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [showShake, setShowShake] = useState(false);
+
+  // Debounced name availability check
+  const checkAvailability = useCallback(async (name: string) => {
+    if (!name.trim() || name.length < 2) {
+      setIsAvailable(null);
+      return;
+    }
+
+    setIsChecking(true);
+    const slug = generateSlug(name);
+
+    try {
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("slug")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (existingProfile) {
+        setIsAvailable(false);
+        setShowShake(true);
+        setTimeout(() => setShowShake(false), 500);
+      } else {
+        setIsAvailable(true);
+      }
+    } catch {
+      setIsAvailable(true);
+    } finally {
+      setIsChecking(false);
+    }
+  }, []);
+
+  // Debounce effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkAvailability(shopName);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [shopName, checkAvailability]);
 
   const generateSlug = (name: string) => {
     return name
@@ -28,6 +71,12 @@ const Home = () => {
       return;
     }
 
+    if (isAvailable === false) {
+      setShowShake(true);
+      setTimeout(() => setShowShake(false), 500);
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -40,22 +89,6 @@ const Home = () => {
       }
 
       const slug = generateSlug(shopName);
-      
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("slug")
-        .eq("slug", slug)
-        .single();
-
-      if (existingProfile) {
-        toast({
-          title: "Shop name already taken",
-          description: "Please choose a different name",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
 
       const { error } = await supabase
         .from("profiles")
@@ -121,19 +154,47 @@ const Home = () => {
 
           {/* Store Name Input */}
           <div className="max-w-md mx-auto w-full space-y-4">
-            <Input
-              type="text"
-              placeholder="Enter your store name"
-              value={shopName}
-              onChange={(e) => setShopName(e.target.value)}
-              className="text-lg py-6 text-center rounded-2xl border-2 focus:border-primary transition-all"
-              onKeyPress={(e) => e.key === "Enter" && handleCreateStore()}
-            />
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Enter your store name"
+                value={shopName}
+                onChange={(e) => setShopName(e.target.value)}
+                className={`text-lg py-6 text-center rounded-2xl border-2 transition-all pr-12 ${
+                  showShake ? "animate-shake" : ""
+                } ${
+                  isAvailable === false 
+                    ? "border-destructive focus:border-destructive" 
+                    : isAvailable === true 
+                      ? "border-green-500 focus:border-green-500" 
+                      : "focus:border-primary"
+                }`}
+                onKeyPress={(e) => e.key === "Enter" && handleCreateStore()}
+              />
+              
+              {/* Status indicator */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                {isChecking && (
+                  <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-primary rounded-full animate-spin" />
+                )}
+                {!isChecking && isAvailable === true && shopName.length >= 2 && (
+                  <Check className="w-5 h-5 text-green-500 animate-scale-in" />
+                )}
+              </div>
+            </div>
+
+            {/* Inline error message */}
+            {isAvailable === false && (
+              <p className="text-sm text-destructive text-center animate-fade-in">
+                Name already taken
+              </p>
+            )}
+
             <Button 
               size="lg" 
               className="w-full text-lg px-8 py-6 rounded-full shadow-apple-lg hover:shadow-xl transition-all hover:scale-[1.02]"
               onClick={handleCreateStore}
-              disabled={isLoading}
+              disabled={isLoading || isChecking || isAvailable === false}
             >
               {isLoading ? "Creating..." : "Create your store"}
               <ArrowRight className="ml-2 h-5 w-5" />
