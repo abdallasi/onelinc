@@ -84,10 +84,46 @@ export default {
             height: "0",
           },
         },
+        "snowfall": {
+          "0%": {
+            transform: "translateY(0) rotate(0deg)",
+            opacity: "1",
+          },
+          "100%": {
+            transform: "translateY(100vh) rotate(360deg)",
+            opacity: "0.3",
+          },
+        },
+        "christmas-fade": {
+          "0%": {
+            opacity: "0",
+            transform: "translate(-50%, 10px)",
+          },
+          "15%": {
+            opacity: "1",
+            transform: "translate(-50%, 0)",
+          },
+          "85%": {
+            opacity: "1",
+            transform: "translate(-50%, 0)",
+          },
+          "100%": {
+            opacity: "0",
+            transform: "translate(-50%, -10px)",
+          },
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-4px)" },
+          "75%": { transform: "translateX(4px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "snowfall": "snowfall linear forwards",
+        "christmas-fade": "christmas-fade 8s ease-in-out forwards",
+        "shake": "shake 0.3s ease-in-out",
       },
     },
   },
