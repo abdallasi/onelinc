@@ -7,6 +7,60 @@ import { useToast } from "@/hooks/use-toast";
 import ProductModal from "@/components/ProductModal";
 import ProductCard from "@/components/ProductCard";
 
+// SEO helper to update document head
+const updateDocumentHead = (profile: { name: string; bio?: string; avatar_url?: string } | null, slug: string) => {
+  if (!profile) return;
+  
+  const title = `${profile.name} — Products on Onelinc`;
+  const description = profile.bio 
+    ? `${profile.bio.substring(0, 120)}${profile.bio.length > 120 ? '...' : ''} Browse products from ${profile.name}. Message to buy instantly.`
+    : `Browse products from ${profile.name}. Message to buy instantly on Onelinc.`;
+  const canonicalUrl = `https://onelinc.com/shop/${slug}`;
+  const ogImage = profile.avatar_url || 'https://onelinc.com/og-image.png';
+
+  // Update title
+  document.title = title;
+
+  // Update or create meta tags
+  const updateMeta = (selector: string, attribute: string, content: string) => {
+    let element = document.querySelector(selector) as HTMLMetaElement;
+    if (!element) {
+      element = document.createElement('meta');
+      if (selector.includes('property=')) {
+        element.setAttribute('property', selector.match(/property="([^"]+)"/)?.[1] || '');
+      } else if (selector.includes('name=')) {
+        element.setAttribute('name', selector.match(/name="([^"]+)"/)?.[1] || '');
+      }
+      document.head.appendChild(element);
+    }
+    element.setAttribute(attribute, content);
+  };
+
+  // Update canonical link
+  let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    document.head.appendChild(canonical);
+  }
+  canonical.href = canonicalUrl;
+
+  // Meta description
+  updateMeta('meta[name="description"]', 'content', description);
+
+  // Open Graph
+  updateMeta('meta[property="og:title"]', 'content', title);
+  updateMeta('meta[property="og:description"]', 'content', description);
+  updateMeta('meta[property="og:url"]', 'content', canonicalUrl);
+  updateMeta('meta[property="og:image"]', 'content', ogImage);
+  updateMeta('meta[property="og:type"]', 'content', 'website');
+
+  // Twitter
+  updateMeta('meta[name="twitter:title"]', 'content', title);
+  updateMeta('meta[name="twitter:description"]', 'content', description);
+  updateMeta('meta[name="twitter:image"]', 'content', ogImage);
+};
+
 const Storefront = () => {
   const { slug } = useParams();
   const [profile, setProfile] = useState<any>(null);
@@ -24,6 +78,18 @@ const Storefront = () => {
       incrementViewCount();
     }
   }, [slug]);
+
+  // Update SEO when profile loads
+  useEffect(() => {
+    if (profile && slug) {
+      updateDocumentHead(profile, slug);
+    }
+    
+    // Cleanup: restore default meta on unmount
+    return () => {
+      document.title = 'Onelinc — Show What You Sell | Create Your Online Store';
+    };
+  }, [profile, slug]);
 
   const incrementViewCount = () => {
     // Generate daily view count (simulated for now, can be replaced with real backend tracking)
