@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, MessageCircle, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import ChristmasSnow from "@/components/ChristmasSnow";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -122,9 +121,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Christmas Snow Effect */}
-      <ChristmasSnow />
-      
       {/* Header */}
       <header className="w-full py-4 px-6 flex justify-between items-center">
         <button 
