@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Share, Plus } from "lucide-react";
 
+// PWA Install Prompt Component
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
