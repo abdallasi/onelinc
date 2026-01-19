@@ -322,7 +322,7 @@ const Dashboard = () => {
             <p className="text-muted-foreground">{profile.bio}</p>
           )}
           <p className="text-sm text-muted-foreground">
-            onelinc.app/shop/{profile.slug}
+            onelinc.xyz/shop/{profile.slug}
           </p>
         </div>
 
