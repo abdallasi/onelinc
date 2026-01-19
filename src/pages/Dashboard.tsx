@@ -139,7 +139,7 @@ const Dashboard = () => {
   };
 
   const handleAddProduct = () => {
-    if (products.length >= 3) {
+    if (products.length >= 4) {
       navigate("/paywall");
       return;
     }
@@ -330,7 +330,7 @@ const Dashboard = () => {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">
-              Products ({products.length}/3)
+              Products ({products.length}/4)
             </h3>
             <Button onClick={handleAddProduct} className="rounded-full">
               <Plus className="h-5 w-5 mr-2" />

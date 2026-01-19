@@ -84,7 +84,7 @@ const Paywall = () => {
             Unlock Unlimited
           </h1>
           <p className="text-[17px] text-muted-foreground leading-snug">
-            Add your 4th product and grow without limits.
+            Add your 5th product and grow without limits.
           </p>
         </div>
 
