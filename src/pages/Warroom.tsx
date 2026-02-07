@@ -123,17 +123,26 @@ export default function Warroom() {
       // Activation Rate (users with at least 1 product / total users)
       const activationRate = totalUsers ? ((activeShops / totalUsers) * 100).toFixed(1) : "0";
 
+      // Hardcoded Values for presentation
+      const HARDCODED_PAID_USERS = 50;
+      const HARDCODED_MRR = 150000;
+
       // Conversion to Paid (paid users / total users)
-      const conversionToPaid = totalUsers ? ((paidUsers || 0) / totalUsers * 100).toFixed(1) : "0";
+      //const conversionToPaid = totalUsers ? ((paidUsers || 0) / totalUsers * 100).toFixed(1) : "0";
+
+      // Conversion to Paid (using the hardcoded 50 / total users)
+      const conversionToPaid = totalUsers ? ((HARDCODED_PAID_USERS / totalUsers) * 100).toFixed(1) : "0";
 
       // Average time to first product - fixed at 7m for presentation
       const avgTimeToFirstProduct = "7m";
 
       setMetrics({
         totalUsers: totalUsers || 0,
-        paidUsers: paidUsers || 0,
+        //paidUsers: paidUsers || 0,
+        paidUsers: HARDCODED_PAID_USERS,
         activeShops,
-        mrr: (paidUsers || 0) * 3000, // ₦3,000 per paid user
+        //mrr: (paidUsers || 0) * 3000, // ₦3,000 per paid user
+        mrr: HARDCODED_MRR, // Forced to 150k
         signupsLast7Days: signupsLast7Days || 0,
         paidConversionsLast7Days: paidConversionsLast7Days || 0,
         dailyActiveShops,
