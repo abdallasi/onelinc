@@ -97,12 +97,12 @@ export default function Warroom() {
         .select("profile_id");
       const activeShops = new Set(shopsData?.map(c => c.profile_id) || []).size;
 
-      // MRR - Assuming plan_code PLN_kdq1b5mhyl6bnrb is a monthly subscription
+      // MRR - ₦3,000/month per paid user
       const { count: mrrCount } = await supabase
         .from("subscriptions")
         .select("*", { count: "exact", head: true })
         .eq("status", "active");
-      const mrr = (mrrCount || 0) * 1000; // Assuming $1000 per subscription
+      const mrr = (mrrCount || 0) * 3000; // ₦3,000 per subscription
 
       // Signups last 7 days
       const sevenDaysAgo = new Date();
@@ -217,11 +217,15 @@ export default function Warroom() {
         ? `${Math.round(avgMinutes / 60)}h`
         : `${Math.round(avgMinutes / 1440)}d`;
 
+      // Use real data for metrics
+      const realPaidUsers = paidUsers || 0;
+      const realTotalUsers = totalUsers || 0;
+      
       setMetrics({
-        totalUsers: 368,
-        paidUsers: 85,
-        activeShops: 368,
-        mrr,
+        totalUsers: realTotalUsers,
+        paidUsers: realPaidUsers,
+        activeShops,
+        mrr: realPaidUsers * 3000, // ₦3,000 per paid user
         signupsLast7Days: signupsLast7Days || 0,
         paidConversionsLast7Days: paidConversionsLast7Days || 0,
         dailyActiveShops,
@@ -261,7 +265,7 @@ export default function Warroom() {
 
       const revenueByDate = (revenueSubsData || []).reduce((acc: any, curr) => {
         const date = new Date(curr.created_at).toLocaleDateString();
-        acc[date] = (acc[date] || 0) + 1000;
+        acc[date] = (acc[date] || 0) + 3000; // ₦3,000 per subscription
         return acc;
       }, {});
 
@@ -391,7 +395,7 @@ export default function Warroom() {
           />
           <MetricCard
             title="MRR"
-            value={`$${metrics.mrr.toLocaleString()}`}
+            value={`₦${metrics.mrr.toLocaleString()}`}
             sparkline={chartData.revenue.slice(-7).map(d => d.amount / 100)}
           />
         </div>
