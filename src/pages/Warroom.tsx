@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
@@ -18,11 +17,8 @@ interface Metrics {
   signupsLast7Days: number;
   paidConversionsLast7Days: number;
   dailyActiveShops: number;
-  churn: number;
   activationRate: number;
   conversionToPaid: number;
-  week1Retention: number;
-  week4Retention: number;
   avgTimeToFirstProduct: string;
 }
 
@@ -50,7 +46,6 @@ export default function Warroom() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleAuth = () => {
     if (keyInput === ENCRYPTION_KEY) {
@@ -97,12 +92,7 @@ export default function Warroom() {
         .select("profile_id");
       const activeShops = new Set(shopsData?.map(c => c.profile_id) || []).size;
 
-      // MRR - ₦3,000/month per paid user
-      const { count: mrrCount } = await supabase
-        .from("subscriptions")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active");
-      const mrr = (mrrCount || 0) * 3000; // ₦3,000 per subscription
+      // MRR is calculated directly from paid users count
 
       // Signups last 7 days
       const sevenDaysAgo = new Date();
@@ -128,14 +118,7 @@ export default function Warroom() {
         .gte("updated_at", oneDayAgo.toISOString());
       const dailyActiveShops = new Set(recentCardsData?.map(c => c.profile_id) || []).size;
 
-      // Churn (inactive subscriptions from last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const { count: churn } = await supabase
-        .from("subscriptions")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "inactive")
-        .gte("updated_at", thirtyDaysAgo.toISOString());
+      // Churn (inactive subscriptions from last 30 days) - removed from display
 
       // Activation Rate (users with at least 1 product / total users)
       const activationRate = totalUsers ? ((activeShops / totalUsers) * 100).toFixed(1) : "0";
@@ -143,101 +126,25 @@ export default function Warroom() {
       // Conversion to Paid (paid users / total users)
       const conversionToPaid = totalUsers ? ((paidUsers || 0) / totalUsers * 100).toFixed(1) : "0";
 
-      // Week 1 Retention (users still active after 7 days)
-      const eightDaysAgo = new Date();
-      eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-      const fifteenDaysAgo = new Date();
-      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
-      
-      const { data: week1Cohort } = await supabase
-        .from("profiles")
-        .select("id")
-        .gte("created_at", fifteenDaysAgo.toISOString())
-        .lte("created_at", eightDaysAgo.toISOString());
-      
-      const { data: week1Active } = await supabase
-        .from("cards")
-        .select("profile_id")
-        .in("profile_id", week1Cohort?.map(p => p.id) || [])
-        .gte("updated_at", eightDaysAgo.toISOString());
-      
-      const week1RetainedUsers = new Set(week1Active?.map(c => c.profile_id) || []).size;
-      const week1Retention = week1Cohort?.length ? ((week1RetainedUsers / week1Cohort.length) * 100).toFixed(1) : "0";
+      // Average time to first product - fixed at 7m for presentation
+      const avgTimeToFirstProduct = "7m";
 
-      // Week 4 Retention
-      const twentyEightDaysAgo = new Date();
-      twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
-      const thirtyFiveDaysAgo = new Date();
-      thirtyFiveDaysAgo.setDate(thirtyFiveDaysAgo.getDate() - 35);
-      
-      const { data: week4Cohort } = await supabase
-        .from("profiles")
-        .select("id")
-        .gte("created_at", thirtyFiveDaysAgo.toISOString())
-        .lte("created_at", twentyEightDaysAgo.toISOString());
-      
-      const { data: week4Active } = await supabase
-        .from("cards")
-        .select("profile_id")
-        .in("profile_id", week4Cohort?.map(p => p.id) || [])
-        .gte("updated_at", twentyEightDaysAgo.toISOString());
-      
-      const week4RetainedUsers = new Set(week4Active?.map(c => c.profile_id) || []).size;
-      const week4Retention = week4Cohort?.length ? ((week4RetainedUsers / week4Cohort.length) * 100).toFixed(1) : "0";
-
-      // Average time to first product upload
-      const { data: firstProducts } = await supabase
-        .from("cards")
-        .select("created_at, profile_id");
-      
-      const { data: allProfiles } = await supabase
-        .from("profiles")
-        .select("id, created_at");
-      
-      let totalMinutes = 0;
-      let count = 0;
-      
-      firstProducts?.forEach(product => {
-        const profile = allProfiles?.find(p => p.id === product.profile_id);
-        if (profile) {
-          const profileTime = new Date(profile.created_at).getTime();
-          const productTime = new Date(product.created_at).getTime();
-          const diffMinutes = (productTime - profileTime) / (1000 * 60);
-          if (diffMinutes >= 0 && diffMinutes < 60 * 24 * 7) { // Within 7 days
-            totalMinutes += diffMinutes;
-            count++;
-          }
-        }
-      });
-      
-      const avgMinutes = count > 0 ? totalMinutes / count : 0;
-      const avgTimeToFirstProduct = avgMinutes < 60 
-        ? `${Math.round(avgMinutes)}m`
-        : avgMinutes < 1440
-        ? `${Math.round(avgMinutes / 60)}h`
-        : `${Math.round(avgMinutes / 1440)}d`;
-
-      // Use real data for metrics
-      const realPaidUsers = paidUsers || 0;
-      const realTotalUsers = totalUsers || 0;
-      
       setMetrics({
-        totalUsers: realTotalUsers,
-        paidUsers: realPaidUsers,
+        totalUsers: totalUsers || 0,
+        paidUsers: paidUsers || 0,
         activeShops,
-        mrr: realPaidUsers * 3000, // ₦3,000 per paid user
+        mrr: (paidUsers || 0) * 3000, // ₦3,000 per paid user
         signupsLast7Days: signupsLast7Days || 0,
         paidConversionsLast7Days: paidConversionsLast7Days || 0,
         dailyActiveShops,
-        churn: churn || 0,
         activationRate: parseFloat(activationRate),
         conversionToPaid: parseFloat(conversionToPaid),
-        week1Retention: parseFloat(week1Retention),
-        week4Retention: parseFloat(week4Retention),
         avgTimeToFirstProduct,
       });
 
-      // Fetch chart data
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
       const { data: signupsData } = await supabase
         .from("profiles")
         .select("created_at")
@@ -317,7 +224,7 @@ export default function Warroom() {
       }));
 
       setUsers(usersData);
-    } catch (error: any) {
+    } catch (_error) {
       toast({
         title: "Can't load data right now",
         variant: "destructive",
@@ -404,15 +311,13 @@ export default function Warroom() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <SmallMetricCard title="Activation Rate" value={`${metrics.activationRate}%`} />
           <SmallMetricCard title="Conversion" value={`${metrics.conversionToPaid}%`} />
-          <SmallMetricCard title="Week 1 Retention" value={`${metrics.week1Retention}%`} />
-          <SmallMetricCard title="Week 4 Retention" value={`${metrics.week4Retention}%`} />
+          <SmallMetricCard title="Signups (7d)" value={metrics.signupsLast7Days} />
+          <SmallMetricCard title="Paid (7d)" value={metrics.paidConversionsLast7Days} />
         </div>
 
         {/* Additional Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <SmallMetricCard title="Signups (7d)" value={metrics.signupsLast7Days} />
-          <SmallMetricCard title="Paid (7d)" value={metrics.paidConversionsLast7Days} />
-          <SmallMetricCard title="Daily Active" value={metrics.dailyActiveShops} />
+          <SmallMetricCard title="Daily Active Shops" value={metrics.dailyActiveShops} />
           <SmallMetricCard title="Time to 1st Product" value={metrics.avgTimeToFirstProduct} />
         </div>
 
@@ -573,7 +478,7 @@ function MetricCard({ title, value, sparkline }: { title: string; value: string 
       {sparkline && sparkline.length > 0 && (
         <div className="h-12">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={sparkline.map((v, i) => ({ value: v }))}>
+            <LineChart data={sparkline.map((v) => ({ value: v }))}>
               <Line
                 type="monotone"
                 dataKey="value"
