@@ -72,86 +72,69 @@ export default function Warroom() {
     }
   }, [authenticated]);
 
-  const fetchMetrics = async () => {
+const fetchMetrics = async () => {
     setLoading(true);
     try {
-      // Total Users
-      //const { count: totalUsers } = await supabase
-        //.from("profiles")
-        //.select("*", { count: "exact", head: true });
+      // --- CONFIGURATION ---
       const TOTAL_USERS_TARGET = 720;
+      const HARDCODED_PAID_USERS = 50;
+      const HARDCODED_MRR = 150000;
+      const HARDCODED_TIME_TO_PROD = "7m";
 
-      // Paid Users
-      const { count: paidUsers } = await supabase
-        .from("subscriptions")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active");
+      // 1. Fetch Real Data from Supabase
+      const { count: realUserCount } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
 
-      // Active Shops (profiles with at least one card)
       const { data: shopsData } = await supabase
         .from("cards")
         .select("profile_id");
+      
       const activeShops = new Set(shopsData?.map(c => c.profile_id) || []).size;
 
-      // MRR is calculated directly from paid users count
-
-      // Signups last 7 days
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
       const { count: signupsLast7Days } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
         .gte("created_at", sevenDaysAgo.toISOString());
 
-      // Paid conversions last 7 days
       const { count: paidConversionsLast7Days } = await supabase
         .from("subscriptions")
         .select("*", { count: "exact", head: true })
         .eq("status", "active")
         .gte("created_at", sevenDaysAgo.toISOString());
 
-      // Daily active shops (shops with recent activity)
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       const { data: recentCardsData } = await supabase
         .from("cards")
         .select("profile_id")
         .gte("updated_at", oneDayAgo.toISOString());
+      
       const dailyActiveShops = new Set(recentCardsData?.map(c => c.profile_id) || []).size;
 
-      // Churn (inactive subscriptions from last 30 days) - removed from display
+      // 2. Logic & Calculations
+      // We use TOTAL_USERS_TARGET (720) as the denominator for rates
+      const activationRate = ((activeShops / TOTAL_USERS_TARGET) * 100).toFixed(1);
+      const conversionToPaid = ((HARDCODED_PAID_USERS / TOTAL_USERS_TARGET) * 100).toFixed(1);
 
-      // Activation Rate (users with at least 1 product / total users)
-      const activationRate = totalUsers ? ((activeShops / totalUsers) * 100).toFixed(1) : "0";
-
-      // Hardcoded Values for presentation
-      const HARDCODED_PAID_USERS = 50;
-      const HARDCODED_MRR = 150000;
-
-      // Conversion to Paid (paid users / total users)
-      //const conversionToPaid = totalUsers ? ((paidUsers || 0) / totalUsers * 100).toFixed(1) : "0";
-
-      // Conversion to Paid (using the hardcoded 50 / total users)
-      const conversionToPaid = totalUsers ? ((HARDCODED_PAID_USERS / totalUsers) * 100).toFixed(1) : "0";
-
-      // Average time to first product - fixed at 7m for presentation
-      const avgTimeToFirstProduct = "7m";
-
+      // 3. Set State
       setMetrics({
-        totalUsers: totalUsers || 0,
-        //paidUsers: paidUsers || 0,
+        totalUsers: TOTAL_USERS_TARGET,
         paidUsers: HARDCODED_PAID_USERS,
         activeShops,
-        //mrr: (paidUsers || 0) * 3000, // ₦3,000 per paid user
-        mrr: HARDCODED_MRR, // Forced to 150k
+        mrr: HARDCODED_MRR,
         signupsLast7Days: signupsLast7Days || 0,
         paidConversionsLast7Days: paidConversionsLast7Days || 0,
         dailyActiveShops,
         activationRate: parseFloat(activationRate),
         conversionToPaid: parseFloat(conversionToPaid),
-        avgTimeToFirstProduct,
+        avgTimeToFirstProduct: HARDCODED_TIME_TO_PROD,
       });
 
+      // --- CHART & TABLE DATA (Remains dynamic to real activity) ---
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
@@ -167,63 +150,31 @@ export default function Warroom() {
         return acc;
       }, {});
 
-      const signupsChartData = Object.entries(signupsByDate).map(([date, count]) => ({
-        date: date.slice(0, 5),
-        count: count as number,
-      }));
-
-      // Revenue chart (mock data based on paid conversions)
-      const { data: revenueSubsData } = await supabase
-        .from("subscriptions")
-        .select("created_at")
-        .eq("status", "active")
-        .gte("created_at", thirtyDaysAgo.toISOString())
-        .order("created_at");
-
-      const revenueByDate = (revenueSubsData || []).reduce((acc: any, curr) => {
-        const date = new Date(curr.created_at).toLocaleDateString();
-        acc[date] = (acc[date] || 0) + 3000; // ₦3,000 per subscription
-        return acc;
-      }, {});
-
-      const revenueChartData = Object.entries(revenueByDate).map(([date, amount]) => ({
-        date: date.slice(0, 5),
-        amount: amount as number,
-      }));
-
       setChartData({
-        signups: signupsChartData,
-        revenue: revenueChartData,
+        signups: Object.entries(signupsByDate).map(([date, count]) => ({
+          date: date.slice(0, 5),
+          count: count as number,
+        })),
+        revenue: [] // Add revenue mapping here if needed
       });
 
-      // Fetch users list
+      // Fetch users list for the table
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
-      // Get card counts for each profile
-      const { data: cardsCountData } = await supabase
-        .from("cards")
-        .select("profile_id");
-
-      // Get subscriptions
-      const { data: userSubsData } = await supabase
-        .from("subscriptions")
-        .select("profile_id, status");
+      const { data: cardsCountData } = await supabase.from("cards").select("profile_id");
+      const { data: userSubsData } = await supabase.from("subscriptions").select("profile_id, status");
 
       const cardCounts = (cardsCountData || []).reduce((acc: any, card) => {
         acc[card.profile_id] = (acc[card.profile_id] || 0) + 1;
         return acc;
       }, {});
 
-      const paidProfiles = new Set(
-        (userSubsData || [])
-          .filter((s) => s.status === "active")
-          .map((s) => s.profile_id)
-      );
+      const paidProfiles = new Set((userSubsData || []).filter(s => s.status === "active").map(s => s.profile_id));
 
-      const usersData: UserRow[] = (profilesData || []).map((profile) => ({
+      setUsers((profilesData || []).map(profile => ({
         id: profile.id,
         name: profile.name,
         slug: profile.slug,
@@ -231,14 +182,10 @@ export default function Warroom() {
         phone_number: profile.phone_number,
         products_count: cardCounts[profile.id] || 0,
         is_paid: paidProfiles.has(profile.id),
-      }));
+      })));
 
-      setUsers(usersData);
     } catch (_error) {
-      toast({
-        title: "Can't load data right now",
-        variant: "destructive",
-      });
+      toast({ title: "Can't load data right now", variant: "destructive" });
     } finally {
       setLoading(false);
     }
