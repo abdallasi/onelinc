@@ -76,9 +76,10 @@ export default function Warroom() {
     setLoading(true);
     try {
       // Total Users
-      const { count: totalUsers } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
+      //const { count: totalUsers } = await supabase
+        //.from("profiles")
+        //.select("*", { count: "exact", head: true });
+      const TOTAL_USERS_TARGET = 720;
 
       // Paid Users
       const { count: paidUsers } = await supabase
