@@ -174,7 +174,7 @@ const Auth = () => {
           onClick={() => navigate("/")}
           className="absolute top-6 left-6 text-xl font-semibold hover:opacity-70 transition-opacity"
         >
-          onelinc
+          onelink
         </button>
 
         <div className="max-w-md w-full">
