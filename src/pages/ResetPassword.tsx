@@ -37,7 +37,6 @@ const ResetPassword = () => {
       const code = params.get("code");
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");
-      const type = params.get("type") || hashParams.get("type");
       const urlError = params.get("error_description") || hashParams.get("error_description") || params.get("error") || hashParams.get("error");
 
       if (urlError) {
