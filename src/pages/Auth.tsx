@@ -217,6 +217,17 @@ const Auth = () => {
                 </Button>
               </div>
 
+              {!isSignUp && (
+                <div className="text-center">
+                  <button
+                    onClick={() => navigate("/forgot-password")}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+
               <div className="text-center">
                 <button
                   onClick={() => setIsSignUp(!isSignUp)}
