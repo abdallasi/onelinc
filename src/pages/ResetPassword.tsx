@@ -100,8 +100,9 @@ const ResetPassword = () => {
     setErrorMessage("");
     try {
       passwordSchema.parse(password);
-    } catch (error: any) {
-      setErrorMessage(error.errors?.[0]?.message || "Password must be at least 6 characters");
+    } catch (error: unknown) {
+      const message = error instanceof z.ZodError ? error.errors[0]?.message : "Password must be at least 6 characters";
+      setErrorMessage(message || "Password must be at least 6 characters");
       return;
     }
     if (password !== confirm) {
@@ -115,8 +116,9 @@ const ResetPassword = () => {
       if (error) throw error;
       await supabase.auth.signOut();
       setResetState("done");
-    } catch (error: any) {
-      setErrorMessage(error.message || "We could not update your password. Please request a fresh link.");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
+      setErrorMessage(message || "We could not update your password. Please request a fresh link.");
     } finally {
       setIsLoading(false);
     }
@@ -127,8 +129,9 @@ const ResetPassword = () => {
     setResendMessage("");
     try {
       z.string().email("Please enter a valid email address").parse(resendEmail);
-    } catch (error: any) {
-      setErrorMessage(error.errors?.[0]?.message || "Please enter a valid email");
+    } catch (error: unknown) {
+      const message = error instanceof z.ZodError ? error.errors[0]?.message : "Please enter a valid email";
+      setErrorMessage(message || "Please enter a valid email");
       return;
     }
 
@@ -139,8 +142,9 @@ const ResetPassword = () => {
       });
       if (error) throw error;
       setResendMessage("If an Onelink account exists for that email, a fresh reset link has been sent.");
-    } catch (error: any) {
-      setErrorMessage(getResetRequestErrorMessage(error.message));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
+      setErrorMessage(getResetRequestErrorMessage(message));
     } finally {
       setIsResending(false);
     }
