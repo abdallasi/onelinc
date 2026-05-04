@@ -20,8 +20,9 @@ const ForgotPassword = () => {
     setErrorMessage("");
     try {
       emailSchema.parse(email);
-    } catch (error: any) {
-      setErrorMessage(error.errors?.[0]?.message || "Please enter a valid email");
+    } catch (error: unknown) {
+      const message = error instanceof z.ZodError ? error.errors[0]?.message : "Please enter a valid email";
+      setErrorMessage(message || "Please enter a valid email");
       return;
     }
 
@@ -32,8 +33,9 @@ const ForgotPassword = () => {
       });
       if (error) throw error;
       setSent(true);
-    } catch (error: any) {
-      setErrorMessage(getResetRequestErrorMessage(error.message));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
+      setErrorMessage(getResetRequestErrorMessage(message));
     } finally {
       setIsLoading(false);
     }
