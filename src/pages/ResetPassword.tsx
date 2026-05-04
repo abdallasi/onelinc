@@ -75,7 +75,7 @@ const ResetPassword = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!mounted) return;
 
-      if (session && type === "recovery") {
+      if (session) {
         setResetState("ready");
       } else {
         markInvalid();
