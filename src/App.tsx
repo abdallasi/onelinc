@@ -8,6 +8,8 @@ import CreateStore from "./pages/CreateStore";
 import Dashboard from "./pages/Dashboard";
 import Storefront from "./pages/Storefront";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Paywall from "./pages/Paywall";
 import Warroom from "./pages/Warroom";
 import NotFound from "./pages/NotFound";
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/create" element={<CreateStore />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/paywall" element={<Paywall />} />
           <Route path="/shop/:slug" element={<Storefront />} />
